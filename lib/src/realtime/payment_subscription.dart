@@ -3,13 +3,14 @@ import 'package:appwrite/appwrite.dart';
 import '../models/daraja_config.dart';
 import '../models/payment_state.dart';
 
-final class PaymentSubscription {
+class PaymentSubscription {
   PaymentSubscription({
-    required Client client,
+    required Databases databases,
+    required Realtime realtime,
     required DarajaConfig config,
     required String checkoutRequestId,
-  })  : _databases = Databases(client),
-        _realtime = Realtime(client),
+  })  : _databases = databases,
+        _realtime = realtime,
         _config = config,
         _checkoutRequestId = checkoutRequestId;
 

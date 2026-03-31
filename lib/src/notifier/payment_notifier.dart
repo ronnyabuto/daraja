@@ -16,17 +16,20 @@ const _prefKey = 'daraja_pending_cid';
 const _pollSchedule = [10, 30, 70];
 const _timeoutSeconds = 90;
 
-final class PaymentNotifier with WidgetsBindingObserver {
+class PaymentNotifier with WidgetsBindingObserver {
   PaymentNotifier({
     required DarajaConfig config,
-    required Client appwriteClient,
+    required Databases databases,
+    required Realtime realtime,
     required DarajaClient darajaClient,
   })  : _config = config,
-        _appwriteClient = appwriteClient,
+        _databases = databases,
+        _realtime = realtime,
         _darajaClient = darajaClient;
 
   final DarajaConfig _config;
-  final Client _appwriteClient;
+  final Databases _databases;
+  final Realtime _realtime;
   final DarajaClient _darajaClient;
 
   final _controller = StreamController<PaymentState>.broadcast();
@@ -116,7 +119,8 @@ final class PaymentNotifier with WidgetsBindingObserver {
 
   void _openSubscription(String cid) {
     _subscription = PaymentSubscription(
-      client: _appwriteClient,
+      databases: _databases,
+      realtime: _realtime,
       config: _config,
       checkoutRequestId: cid,
     );

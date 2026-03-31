@@ -7,7 +7,7 @@ import '../models/daraja_exception.dart';
 import '../models/payment_result.dart';
 import 'token_cache.dart';
 
-final class DarajaClient {
+class DarajaClient {
   DarajaClient(this._config, {http.Client? httpClient})
       : _http = httpClient ?? http.Client(),
         _cache = TokenCache();
