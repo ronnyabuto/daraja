@@ -23,11 +23,9 @@ class PaymentSubscription {
 
   Stream<PaymentState> get stream async* {
     _subscription = _realtime.subscribe([
-      Channel.document(
-        _config.appwriteDatabaseId,
-        _config.appwriteCollectionId,
-        _checkoutRequestId,
-      ),
+      'databases.${_config.appwriteDatabaseId}'
+          '.collections.${_config.appwriteCollectionId}'
+          '.documents.$_checkoutRequestId',
     ]);
 
     await for (final message in _subscription!.stream) {
@@ -51,6 +49,7 @@ class PaymentSubscription {
   /// during the gap. Returns the terminal state if found, null if still pending.
   Future<PaymentState?> poll() async {
     try {
+      // ignore: deprecated_member_use
       final doc = await _databases.getDocument(
         databaseId: _config.appwriteDatabaseId,
         collectionId: _config.appwriteCollectionId,
