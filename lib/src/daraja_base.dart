@@ -13,7 +13,8 @@ final class Daraja {
 
     _notifier = PaymentNotifier(
       config: config,
-      appwriteClient: client,
+      databases: Databases(client),
+      realtime: Realtime(client),
       darajaClient: DarajaClient(config),
     );
   }
