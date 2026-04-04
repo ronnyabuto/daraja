@@ -10,6 +10,8 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:shared_preferences_platform_interface/in_memory_shared_preferences_async.dart';
+import 'package:shared_preferences_platform_interface/shared_preferences_async_platform_interface.dart';
 
 import '../helpers/fixtures.dart';
 
@@ -19,24 +21,24 @@ class _MockDatabases extends Mock implements Databases {}
 
 class _MockRealtime extends Mock implements Realtime {}
 
-class _MockRealtimeSubscription extends Mock implements RealtimeSubscription {}
-
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   late _MockDarajaClient mockClient;
   late _MockDatabases mockDatabases;
   late _MockRealtime mockRealtime;
-  late _MockRealtimeSubscription mockRealtimeSub;
   late StreamController<RealtimeMessage> realtimeController;
   late PaymentNotifier notifier;
 
   void stubRealtimeNeverResolves() {
     realtimeController = StreamController<RealtimeMessage>();
-    when(() => mockRealtimeSub.stream)
-        .thenAnswer((_) => realtimeController.stream);
-    when(() => mockRealtimeSub.close()).thenReturn(null);
-    when(() => mockRealtime.subscribe(any())).thenReturn(mockRealtimeSub);
+    final sub = RealtimeSubscription(
+      controller: realtimeController,
+      close: () async {},
+      channels: [],
+      queries: [],
+    );
+    when(() => mockRealtime.subscribe(any())).thenReturn(sub);
   }
 
   void stubDatabaseNotFound() {
@@ -48,13 +50,11 @@ void main() {
   }
 
   setUp(() {
-    SharedPreferences.setMockInitialValues({});
+    SharedPreferencesAsyncPlatform.instance = InMemorySharedPreferencesAsync.empty();
 
     mockClient = _MockDarajaClient();
     mockDatabases = _MockDatabases();
     mockRealtime = _MockRealtime();
-    mockRealtimeSub = _MockRealtimeSubscription();
-
     stubRealtimeNeverResolves();
 
     notifier = PaymentNotifier(
@@ -92,8 +92,9 @@ void main() {
           )).thenAnswer((_) async => testCid);
       stubDatabaseNotFound();
 
-      final stream = await _initiate();
-      final states = await stream.take(2).toList();
+      final statesFuture = notifier.stream.take(2).toList();
+      await _initiate();
+      final states = await statesFuture;
 
       expect(states[0], isA<PaymentInitiating>());
       expect(states[1], isA<PaymentPending>());
@@ -111,8 +112,9 @@ void main() {
       stubDatabaseNotFound();
 
       final before = DateTime.now();
-      final stream = await _initiate();
-      final states = await stream.take(2).toList();
+      final statesFuture = notifier.stream.take(2).toList();
+      await _initiate();
+      final states = await statesFuture;
       final after = DateTime.now();
 
       final pending = states[1] as PaymentPending;
@@ -129,8 +131,9 @@ void main() {
             userId: any(named: 'userId'),
           )).thenThrow(const DarajaException('OAuth failed', statusCode: 401));
 
-      final stream = await _initiate();
-      final states = await stream.take(2).toList();
+      final statesFuture = notifier.stream.take(2).toList();
+      await _initiate();
+      final states = await statesFuture;
 
       expect(states[0], isA<PaymentInitiating>());
       expect(states[1], isA<PaymentError>());
@@ -147,8 +150,9 @@ void main() {
             userId: any(named: 'userId'),
           )).thenThrow(const FormatException('Unrecognised phone format: 123'));
 
-      final stream = await _initiate();
-      final states = await stream.take(2).toList();
+      final statesFuture = notifier.stream.take(2).toList();
+      await _initiate();
+      final states = await statesFuture;
 
       expect(states[1], isA<PaymentError>());
     });
@@ -164,8 +168,9 @@ void main() {
           )).thenThrow(
             ArgumentError.value(-1, 'amount', 'must be a positive integer'));
 
-      final stream = await _initiate();
-      final states = await stream.take(2).toList();
+      final statesFuture = notifier.stream.take(2).toList();
+      await _initiate();
+      final states = await statesFuture;
 
       expect(states[1], isA<PaymentError>());
     });
@@ -215,7 +220,8 @@ void main() {
         stubDatabaseNotFound();
 
         final states = <PaymentState>[];
-        _initiate().then((stream) => stream.listen(states.add));
+        notifier.stream.listen(states.add);
+        _initiate();
 
         fake.flushMicrotasks();
         expect(states.length, 2); // Initiating + Pending
@@ -377,8 +383,9 @@ void main() {
       stubDatabaseNotFound();
 
       // Second payment should start cleanly.
-      final second = await _initiate();
-      final states = await second.take(2).toList();
+      final statesFuture = notifier.stream.take(2).toList();
+      await _initiate();
+      final states = await statesFuture;
       expect(states[0], isA<PaymentInitiating>());
       expect(states[1], isA<PaymentPending>());
     });
@@ -463,8 +470,8 @@ void main() {
 
     test('emits PaymentPending when CID exists and payment is still open',
         () async {
-      SharedPreferences.setMockInitialValues(
-          {'daraja_pending_cid': testCid});
+      SharedPreferencesAsyncPlatform.instance =
+          InMemorySharedPreferencesAsync.withData({'daraja_pending_cid': testCid});
       stubDatabaseNotFound();
 
       final states = <PaymentState>[];
@@ -479,8 +486,8 @@ void main() {
 
     test('resolves immediately when payment document exists at restore time',
         () async {
-      SharedPreferences.setMockInitialValues(
-          {'daraja_pending_cid': testCid});
+      SharedPreferencesAsyncPlatform.instance =
+          InMemorySharedPreferencesAsync.withData({'daraja_pending_cid': testCid});
       when(() => mockDatabases.getDocument(
             databaseId: any(named: 'databaseId'),
             collectionId: any(named: 'collectionId'),
@@ -500,8 +507,8 @@ void main() {
 
     test('clears CID from SharedPreferences after resolving at restore time',
         () async {
-      SharedPreferences.setMockInitialValues(
-          {'daraja_pending_cid': testCid});
+      SharedPreferencesAsyncPlatform.instance =
+          InMemorySharedPreferencesAsync.withData({'daraja_pending_cid': testCid});
       when(() => mockDatabases.getDocument(
             databaseId: any(named: 'databaseId'),
             collectionId: any(named: 'collectionId'),
