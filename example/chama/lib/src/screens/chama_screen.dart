@@ -36,10 +36,7 @@ class ChamaScreen extends ConsumerWidget {
         children: [
           PotProgressCard(pot: pot, title: session.title),
           const SizedBox(height: 16),
-          Text(
-            'Members',
-            style: Theme.of(context).textTheme.titleSmall,
-          ),
+          Text('Members', style: Theme.of(context).textTheme.titleSmall),
           const SizedBox(height: 8),
           ...session.members.map(
             (m) => MemberTile(

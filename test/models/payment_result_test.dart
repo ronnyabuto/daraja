@@ -2,10 +2,10 @@ import 'package:daraja/src/models/payment_result.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 PaymentResult _result(int code) => PaymentResult(
-      checkoutRequestId: 'ws_CO_test',
-      resultCode: code,
-      resultDesc: 'desc',
-    );
+  checkoutRequestId: 'ws_CO_test',
+  resultCode: code,
+  resultDesc: 'desc',
+);
 
 void main() {
   group('PaymentResult', () {
@@ -16,8 +16,11 @@ void main() {
 
       test('false for all non-zero codes', () {
         for (final code in [1, 17, 1031, 1032, 1037, 9999]) {
-          expect(_result(code).isSuccess, isFalse,
-              reason: 'expected isSuccess=false for code $code');
+          expect(
+            _result(code).isSuccess,
+            isFalse,
+            reason: 'expected isSuccess=false for code $code',
+          );
         }
       });
     });
@@ -29,8 +32,11 @@ void main() {
 
       test('false for all other codes', () {
         for (final code in [0, 1, 17, 1031, 1037]) {
-          expect(_result(code).isCancelled, isFalse,
-              reason: 'expected isCancelled=false for code $code');
+          expect(
+            _result(code).isCancelled,
+            isFalse,
+            reason: 'expected isCancelled=false for code $code',
+          );
         }
       });
     });
@@ -42,8 +48,11 @@ void main() {
 
       test('false for all other codes', () {
         for (final code in [0, 1, 17, 1031, 1032]) {
-          expect(_result(code).isTimeout, isFalse,
-              reason: 'expected isTimeout=false for code $code');
+          expect(
+            _result(code).isTimeout,
+            isFalse,
+            reason: 'expected isTimeout=false for code $code',
+          );
         }
       });
     });
@@ -55,8 +64,11 @@ void main() {
 
       test('false for all other codes', () {
         for (final code in [0, 1, 1031, 1032, 1037]) {
-          expect(_result(code).isPending, isFalse,
-              reason: 'expected isPending=false for code $code');
+          expect(
+            _result(code).isPending,
+            isFalse,
+            reason: 'expected isPending=false for code $code',
+          );
         }
       });
     });
@@ -65,11 +77,17 @@ void main() {
       final codes = [0, 17, 1031, 1032, 1037, 9999];
       for (final code in codes) {
         final r = _result(code);
-        final trueCount = [r.isSuccess, r.isCancelled, r.isTimeout, r.isPending]
-            .where((b) => b)
-            .length;
-        expect(trueCount, lessThanOrEqualTo(1),
-            reason: 'multiple flags true for code $code');
+        final trueCount = [
+          r.isSuccess,
+          r.isCancelled,
+          r.isTimeout,
+          r.isPending,
+        ].where((b) => b).length;
+        expect(
+          trueCount,
+          lessThanOrEqualTo(1),
+          reason: 'multiple flags true for code $code',
+        );
       }
     });
 

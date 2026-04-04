@@ -22,16 +22,15 @@ class MemberTile extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final asyncState = ref.watch(memberPaymentProvider(member.id));
     final state = asyncState.value ?? const PaymentIdle();
-    final isTerminal = state is PaymentSuccess ||
+    final isTerminal =
+        state is PaymentSuccess ||
         state is PaymentFailed ||
         state is PaymentCancelled ||
         state is PaymentTimeout;
     final isActive = state is PaymentInitiating || state is PaymentPending;
 
     return ListTile(
-      leading: CircleAvatar(
-        child: Text(member.name[0]),
-      ),
+      leading: CircleAvatar(child: Text(member.name[0])),
       title: Text(member.name),
       subtitle: Text(member.phone, style: const TextStyle(fontSize: 12)),
       trailing: Row(

@@ -51,8 +51,9 @@ class PotProgressCard extends StatelessWidget {
                   const SizedBox(width: 6),
                   Text(
                     'All members have paid',
-                    style: theme.textTheme.bodyMedium
-                        ?.copyWith(color: Colors.green),
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: Colors.green,
+                    ),
                   ),
                 ],
               ),

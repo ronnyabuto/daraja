@@ -13,17 +13,18 @@ class PotNotifier extends Notifier<PotState> {
 
   @override
   PotState build() => PotState.empty(
-        target: _session.totalAmount,
-        memberCount: _session.memberCount,
-      );
+    target: _session.totalAmount,
+    memberCount: _session.memberCount,
+  );
 
   void onMemberPaid(int amount) {
     state = state.withPayment(amount);
   }
 }
 
-final potProvider =
-    NotifierProvider<PotNotifier, PotState>(() => throw UnimplementedError());
+final potProvider = NotifierProvider<PotNotifier, PotState>(
+  () => throw UnimplementedError(),
+);
 
 /// Watches all member payments and drives the pot.
 ///
@@ -31,14 +32,14 @@ final potProvider =
 Provider<void> makePotSyncProvider(ChamaSession session) {
   return Provider<void>((ref) {
     for (final member in session.members) {
-      ref.listen<AsyncValue<PaymentState>>(
-        memberPaymentProvider(member.id),
-        (_, next) {
-          if (next.value case PaymentSuccess(:final amount)) {
-            ref.read(potProvider.notifier).onMemberPaid(amount);
-          }
-        },
-      );
+      ref.listen<AsyncValue<PaymentState>>(memberPaymentProvider(member.id), (
+        _,
+        next,
+      ) {
+        if (next.value case PaymentSuccess(:final amount)) {
+          ref.read(potProvider.notifier).onMemberPaid(amount);
+        }
+      });
     }
   });
 }

@@ -26,8 +26,9 @@ void main() {
 
   // Sets up the OAuth mock so tests focused on STK Push don't need to repeat it.
   void stubOauth() {
-    when(() => mockHttp.get(any(), headers: any(named: 'headers')))
-        .thenAnswer((_) async => oauthSuccess());
+    when(
+      () => mockHttp.get(any(), headers: any(named: 'headers')),
+    ).thenAnswer((_) async => oauthSuccess());
   }
 
   // Captures the body sent to the STK Push endpoint.
@@ -45,9 +46,13 @@ void main() {
   group('OAuth token fetch', () {
     test('fetches a token and returns it on success', () async {
       stubOauth();
-      when(() => mockHttp.post(any(),
-              headers: any(named: 'headers'), body: any(named: 'body')))
-          .thenAnswer((_) async => stkPushSuccess());
+      when(
+        () => mockHttp.post(
+          any(),
+          headers: any(named: 'headers'),
+          body: any(named: 'body'),
+        ),
+      ).thenAnswer((_) async => stkPushSuccess());
 
       await client.initiateStkPush(
         phone: '0712345678',
@@ -57,8 +62,9 @@ void main() {
         userId: testUserId,
       );
 
-      verify(() => mockHttp.get(any(), headers: any(named: 'headers')))
-          .called(1);
+      verify(
+        () => mockHttp.get(any(), headers: any(named: 'headers')),
+      ).called(1);
     });
 
     test('sends Basic Auth header with base64 encoded credentials', () async {
@@ -66,11 +72,16 @@ void main() {
         utf8.encode('${testConfig.consumerKey}:${testConfig.consumerSecret}'),
       );
 
-      when(() => mockHttp.get(any(), headers: any(named: 'headers')))
-          .thenAnswer((_) async => oauthSuccess());
-      when(() => mockHttp.post(any(),
-              headers: any(named: 'headers'), body: any(named: 'body')))
-          .thenAnswer((_) async => stkPushSuccess());
+      when(
+        () => mockHttp.get(any(), headers: any(named: 'headers')),
+      ).thenAnswer((_) async => oauthSuccess());
+      when(
+        () => mockHttp.post(
+          any(),
+          headers: any(named: 'headers'),
+          body: any(named: 'body'),
+        ),
+      ).thenAnswer((_) async => stkPushSuccess());
 
       await client.initiateStkPush(
         phone: '0712345678',
@@ -81,59 +92,80 @@ void main() {
       );
 
       final captured = verify(
-        () => mockHttp.get(
-          any(),
-          headers: captureAny(named: 'headers'),
-        ),
+        () => mockHttp.get(any(), headers: captureAny(named: 'headers')),
       ).captured;
       final headers = captured.single as Map<String, String>;
       expect(headers['Authorization'], 'Basic $expectedCredentials');
     });
 
-    test('caches the token — second call does not hit OAuth endpoint', () async {
-      stubOauth();
-      when(() => mockHttp.post(any(),
-              headers: any(named: 'headers'), body: any(named: 'body')))
-          .thenAnswer((_) async => stkPushSuccess());
+    test(
+      'caches the token — second call does not hit OAuth endpoint',
+      () async {
+        stubOauth();
+        when(
+          () => mockHttp.post(
+            any(),
+            headers: any(named: 'headers'),
+            body: any(named: 'body'),
+          ),
+        ).thenAnswer((_) async => stkPushSuccess());
 
-      await client.initiateStkPush(
-        phone: '0712345678', amount: 100, reference: 'R', description: 'D',
-        userId: testUserId,
-      );
-      await client.initiateStkPush(
-        phone: '0712345678', amount: 100, reference: 'R', description: 'D',
-        userId: testUserId,
-      );
+        await client.initiateStkPush(
+          phone: '0712345678',
+          amount: 100,
+          reference: 'R',
+          description: 'D',
+          userId: testUserId,
+        );
+        await client.initiateStkPush(
+          phone: '0712345678',
+          amount: 100,
+          reference: 'R',
+          description: 'D',
+          userId: testUserId,
+        );
 
-      // Token should be cached — OAuth endpoint called only once.
-      verify(() => mockHttp.get(any(), headers: any(named: 'headers')))
-          .called(1);
-    });
+        // Token should be cached — OAuth endpoint called only once.
+        verify(
+          () => mockHttp.get(any(), headers: any(named: 'headers')),
+        ).called(1);
+      },
+    );
 
     test('throws DarajaException with statusCode on OAuth failure', () async {
-      when(() => mockHttp.get(any(), headers: any(named: 'headers')))
-          .thenAnswer((_) async => apiError(401, 'Unauthorized'));
+      when(
+        () => mockHttp.get(any(), headers: any(named: 'headers')),
+      ).thenAnswer((_) async => apiError(401, 'Unauthorized'));
 
       expect(
         () => client.initiateStkPush(
-          phone: '0712345678', amount: 100, reference: 'R', description: 'D',
+          phone: '0712345678',
+          amount: 100,
+          reference: 'R',
+          description: 'D',
           userId: testUserId,
         ),
         throwsA(
-          isA<DarajaException>()
-              .having((e) => e.statusCode, 'statusCode', 401),
+          isA<DarajaException>().having((e) => e.statusCode, 'statusCode', 401),
         ),
       );
     });
 
     test('hits the correct sandbox OAuth URL', () async {
       stubOauth();
-      when(() => mockHttp.post(any(),
-              headers: any(named: 'headers'), body: any(named: 'body')))
-          .thenAnswer((_) async => stkPushSuccess());
+      when(
+        () => mockHttp.post(
+          any(),
+          headers: any(named: 'headers'),
+          body: any(named: 'body'),
+        ),
+      ).thenAnswer((_) async => stkPushSuccess());
 
       await client.initiateStkPush(
-        phone: '0712345678', amount: 100, reference: 'R', description: 'D',
+        phone: '0712345678',
+        amount: 100,
+        reference: 'R',
+        description: 'D',
         userId: testUserId,
       );
 
@@ -149,18 +181,28 @@ void main() {
   group('STK Push — phone normalisation', () {
     Future<void> stubAndVerifyPhone(String input, String expected) async {
       stubOauth();
-      when(() => mockHttp.post(any(),
-              headers: any(named: 'headers'), body: any(named: 'body')))
-          .thenAnswer((_) async => stkPushSuccess());
+      when(
+        () => mockHttp.post(
+          any(),
+          headers: any(named: 'headers'),
+          body: any(named: 'body'),
+        ),
+      ).thenAnswer((_) async => stkPushSuccess());
 
       await client.initiateStkPush(
-        phone: input, amount: 100, reference: 'REF', description: 'Test',
+        phone: input,
+        amount: 100,
+        reference: 'REF',
+        description: 'Test',
         userId: testUserId,
       );
 
       final body = captureRequestBody();
-      expect(body['PhoneNumber'], expected,
-          reason: 'Phone "$input" should normalise to "$expected"');
+      expect(
+        body['PhoneNumber'],
+        expected,
+        reason: 'Phone "$input" should normalise to "$expected"',
+      );
       expect(body['PartyA'], expected);
     }
 
@@ -202,11 +244,13 @@ void main() {
           description: 'Test',
           userId: testUserId,
         ),
-        throwsA(isA<FormatException>().having(
-          (e) => e.message,
-          'message',
-          contains('12345'),
-        )),
+        throwsA(
+          isA<FormatException>().having(
+            (e) => e.message,
+            'message',
+            contains('12345'),
+          ),
+        ),
       );
       verifyNever(() => mockHttp.get(any(), headers: any(named: 'headers')));
     });
@@ -218,8 +262,12 @@ void main() {
     test('throws ArgumentError for amount of zero', () {
       expect(
         () => client.initiateStkPush(
-            phone: '0712345678', amount: 0, reference: 'REF',
-            description: 'Test', userId: testUserId),
+          phone: '0712345678',
+          amount: 0,
+          reference: 'REF',
+          description: 'Test',
+          userId: testUserId,
+        ),
         throwsA(isA<ArgumentError>()),
       );
       verifyNever(() => mockHttp.get(any(), headers: any(named: 'headers')));
@@ -228,8 +276,12 @@ void main() {
     test('throws ArgumentError for negative amount', () {
       expect(
         () => client.initiateStkPush(
-            phone: '0712345678', amount: -50, reference: 'REF',
-            description: 'Test', userId: testUserId),
+          phone: '0712345678',
+          amount: -50,
+          reference: 'REF',
+          description: 'Test',
+          userId: testUserId,
+        ),
         throwsA(isA<ArgumentError>()),
       );
     });
@@ -237,24 +289,33 @@ void main() {
     test('throws ArgumentError when reference exceeds 12 characters', () {
       expect(
         () => client.initiateStkPush(
-            phone: '0712345678', amount: 100,
-            reference: 'ABCDEFGHIJKLM', // 13 chars
-            description: 'Test', userId: testUserId),
+          phone: '0712345678',
+          amount: 100,
+          reference: 'ABCDEFGHIJKLM', // 13 chars
+          description: 'Test',
+          userId: testUserId,
+        ),
         throwsA(isA<ArgumentError>()),
       );
     });
 
     test('accepts reference of exactly 12 characters', () async {
       stubOauth();
-      when(() => mockHttp.post(any(),
-              headers: any(named: 'headers'), body: any(named: 'body')))
-          .thenAnswer((_) async => stkPushSuccess());
+      when(
+        () => mockHttp.post(
+          any(),
+          headers: any(named: 'headers'),
+          body: any(named: 'body'),
+        ),
+      ).thenAnswer((_) async => stkPushSuccess());
 
       await expectLater(
         client.initiateStkPush(
-          phone: '0712345678', amount: 100,
+          phone: '0712345678',
+          amount: 100,
           reference: 'ABCDEFGHIJKL', // exactly 12 chars
-          description: 'Test', userId: testUserId,
+          description: 'Test',
+          userId: testUserId,
         ),
         completes,
       );
@@ -263,22 +324,31 @@ void main() {
     test('throws ArgumentError when description exceeds 13 characters', () {
       expect(
         () => client.initiateStkPush(
-            phone: '0712345678', amount: 100, reference: 'REF',
-            description: 'ABCDEFGHIJKLMN', // 14 chars
-            userId: testUserId),
+          phone: '0712345678',
+          amount: 100,
+          reference: 'REF',
+          description: 'ABCDEFGHIJKLMN', // 14 chars
+          userId: testUserId,
+        ),
         throwsA(isA<ArgumentError>()),
       );
     });
 
     test('accepts description of exactly 13 characters', () async {
       stubOauth();
-      when(() => mockHttp.post(any(),
-              headers: any(named: 'headers'), body: any(named: 'body')))
-          .thenAnswer((_) async => stkPushSuccess());
+      when(
+        () => mockHttp.post(
+          any(),
+          headers: any(named: 'headers'),
+          body: any(named: 'body'),
+        ),
+      ).thenAnswer((_) async => stkPushSuccess());
 
       await expectLater(
         client.initiateStkPush(
-          phone: '0712345678', amount: 100, reference: 'REF',
+          phone: '0712345678',
+          amount: 100,
+          reference: 'REF',
           description: 'ABCDEFGHIJKLM', // exactly 13 chars
           userId: testUserId,
         ),
@@ -290,33 +360,50 @@ void main() {
   group('STK Push — request body', () {
     setUp(stubOauth);
 
-    test('sends correct password: base64(shortcode + passkey + timestamp)', () async {
-      when(() => mockHttp.post(any(),
-              headers: any(named: 'headers'), body: any(named: 'body')))
-          .thenAnswer((_) async => stkPushSuccess());
+    test(
+      'sends correct password: base64(shortcode + passkey + timestamp)',
+      () async {
+        when(
+          () => mockHttp.post(
+            any(),
+            headers: any(named: 'headers'),
+            body: any(named: 'body'),
+          ),
+        ).thenAnswer((_) async => stkPushSuccess());
 
-      await client.initiateStkPush(
-        phone: '0712345678', amount: 100, reference: 'REF',
-        description: 'Test', userId: testUserId,
-      );
+        await client.initiateStkPush(
+          phone: '0712345678',
+          amount: 100,
+          reference: 'REF',
+          description: 'Test',
+          userId: testUserId,
+        );
 
-      final body = captureRequestBody();
-      final timestamp = body['Timestamp'] as String;
-      final expectedRaw =
-          '${testConfig.shortcode}${testConfig.passkey}$timestamp';
-      final expectedPassword = base64.encode(utf8.encode(expectedRaw));
+        final body = captureRequestBody();
+        final timestamp = body['Timestamp'] as String;
+        final expectedRaw =
+            '${testConfig.shortcode}${testConfig.passkey}$timestamp';
+        final expectedPassword = base64.encode(utf8.encode(expectedRaw));
 
-      expect(body['Password'], expectedPassword);
-    });
+        expect(body['Password'], expectedPassword);
+      },
+    );
 
     test('timestamp is 14 digits in YYYYMMDDHHmmss format', () async {
-      when(() => mockHttp.post(any(),
-              headers: any(named: 'headers'), body: any(named: 'body')))
-          .thenAnswer((_) async => stkPushSuccess());
+      when(
+        () => mockHttp.post(
+          any(),
+          headers: any(named: 'headers'),
+          body: any(named: 'body'),
+        ),
+      ).thenAnswer((_) async => stkPushSuccess());
 
       await client.initiateStkPush(
-        phone: '0712345678', amount: 100, reference: 'REF',
-        description: 'Test', userId: testUserId,
+        phone: '0712345678',
+        amount: 100,
+        reference: 'REF',
+        description: 'Test',
+        userId: testUserId,
       );
 
       final body = captureRequestBody();
@@ -338,13 +425,20 @@ void main() {
     });
 
     test('timestamp and password share the same datetime value', () async {
-      when(() => mockHttp.post(any(),
-              headers: any(named: 'headers'), body: any(named: 'body')))
-          .thenAnswer((_) async => stkPushSuccess());
+      when(
+        () => mockHttp.post(
+          any(),
+          headers: any(named: 'headers'),
+          body: any(named: 'body'),
+        ),
+      ).thenAnswer((_) async => stkPushSuccess());
 
       await client.initiateStkPush(
-        phone: '0712345678', amount: 100, reference: 'REF',
-        description: 'Test', userId: testUserId,
+        phone: '0712345678',
+        amount: 100,
+        reference: 'REF',
+        description: 'Test',
+        userId: testUserId,
       );
 
       final body = captureRequestBody();
@@ -356,13 +450,20 @@ void main() {
     });
 
     test('constructs CallBackURL with domain, path and userId', () async {
-      when(() => mockHttp.post(any(),
-              headers: any(named: 'headers'), body: any(named: 'body')))
-          .thenAnswer((_) async => stkPushSuccess());
+      when(
+        () => mockHttp.post(
+          any(),
+          headers: any(named: 'headers'),
+          body: any(named: 'body'),
+        ),
+      ).thenAnswer((_) async => stkPushSuccess());
 
       await client.initiateStkPush(
-        phone: '0712345678', amount: 100, reference: 'REF',
-        description: 'Test', userId: 'user_xyz',
+        phone: '0712345678',
+        amount: 100,
+        reference: 'REF',
+        description: 'Test',
+        userId: 'user_xyz',
       );
 
       final body = captureRequestBody();
@@ -373,13 +474,20 @@ void main() {
     });
 
     test('sends correct TransactionType', () async {
-      when(() => mockHttp.post(any(),
-              headers: any(named: 'headers'), body: any(named: 'body')))
-          .thenAnswer((_) async => stkPushSuccess());
+      when(
+        () => mockHttp.post(
+          any(),
+          headers: any(named: 'headers'),
+          body: any(named: 'body'),
+        ),
+      ).thenAnswer((_) async => stkPushSuccess());
 
       await client.initiateStkPush(
-        phone: '0712345678', amount: 500, reference: 'REF',
-        description: 'Test', userId: testUserId,
+        phone: '0712345678',
+        amount: 500,
+        reference: 'REF',
+        description: 'Test',
+        userId: testUserId,
       );
 
       final body = captureRequestBody();
@@ -393,42 +501,64 @@ void main() {
     setUp(stubOauth);
 
     test('returns CheckoutRequestID on success', () async {
-      when(() => mockHttp.post(any(),
-              headers: any(named: 'headers'), body: any(named: 'body')))
-          .thenAnswer((_) async => stkPushSuccess('ws_CO_unique_123'));
+      when(
+        () => mockHttp.post(
+          any(),
+          headers: any(named: 'headers'),
+          body: any(named: 'body'),
+        ),
+      ).thenAnswer((_) async => stkPushSuccess('ws_CO_unique_123'));
 
       final cid = await client.initiateStkPush(
-        phone: '0712345678', amount: 100, reference: 'REF',
-        description: 'Test', userId: testUserId,
+        phone: '0712345678',
+        amount: 100,
+        reference: 'REF',
+        description: 'Test',
+        userId: testUserId,
       );
 
       expect(cid, 'ws_CO_unique_123');
     });
 
     test('throws DarajaException with statusCode on non-200 response', () {
-      when(() => mockHttp.post(any(),
-              headers: any(named: 'headers'), body: any(named: 'body')))
-          .thenAnswer((_) async => apiError(500));
+      when(
+        () => mockHttp.post(
+          any(),
+          headers: any(named: 'headers'),
+          body: any(named: 'body'),
+        ),
+      ).thenAnswer((_) async => apiError(500));
 
       expect(
         () => client.initiateStkPush(
-          phone: '0712345678', amount: 100, reference: 'REF',
-          description: 'Test', userId: testUserId,
+          phone: '0712345678',
+          amount: 100,
+          reference: 'REF',
+          description: 'Test',
+          userId: testUserId,
         ),
-        throwsA(isA<DarajaException>()
-            .having((e) => e.statusCode, 'statusCode', 500)),
+        throwsA(
+          isA<DarajaException>().having((e) => e.statusCode, 'statusCode', 500),
+        ),
       );
     });
 
     test('throws DarajaException when ResponseCode is not "0"', () {
-      when(() => mockHttp.post(any(),
-              headers: any(named: 'headers'), body: any(named: 'body')))
-          .thenAnswer((_) async => stkPushRejected());
+      when(
+        () => mockHttp.post(
+          any(),
+          headers: any(named: 'headers'),
+          body: any(named: 'body'),
+        ),
+      ).thenAnswer((_) async => stkPushRejected());
 
       expect(
         () => client.initiateStkPush(
-          phone: '0712345678', amount: 100, reference: 'REF',
-          description: 'Test', userId: testUserId,
+          phone: '0712345678',
+          amount: 100,
+          reference: 'REF',
+          description: 'Test',
+          userId: testUserId,
         ),
         throwsA(isA<DarajaException>()),
       );
@@ -438,57 +568,87 @@ void main() {
   group('STK Query', () {
     setUp(stubOauth);
 
-    test('returns PaymentResult with isPending=true when still processing', () async {
-      when(() => mockHttp.post(any(),
-              headers: any(named: 'headers'), body: any(named: 'body')))
-          .thenAnswer((_) async => stkQueryPending());
+    test(
+      'returns PaymentResult with isPending=true when still processing',
+      () async {
+        when(
+          () => mockHttp.post(
+            any(),
+            headers: any(named: 'headers'),
+            body: any(named: 'body'),
+          ),
+        ).thenAnswer((_) async => stkQueryPending());
 
-      final result = await client.queryStkStatus(testCid);
+        final result = await client.queryStkStatus(testCid);
 
-      expect(result, isA<PaymentResult>());
-      expect(result.checkoutRequestId, testCid);
-      expect(result.isPending, isTrue);
-      expect(result.resultCode, 17);
-    });
+        expect(result, isA<PaymentResult>());
+        expect(result.checkoutRequestId, testCid);
+        expect(result.isPending, isTrue);
+        expect(result.resultCode, 17);
+      },
+    );
 
-    test('returns PaymentResult with isSuccess=true on completed payment', () async {
-      when(() => mockHttp.post(any(),
-              headers: any(named: 'headers'), body: any(named: 'body')))
-          .thenAnswer((_) async => stkQuerySuccess());
+    test(
+      'returns PaymentResult with isSuccess=true on completed payment',
+      () async {
+        when(
+          () => mockHttp.post(
+            any(),
+            headers: any(named: 'headers'),
+            body: any(named: 'body'),
+          ),
+        ).thenAnswer((_) async => stkQuerySuccess());
 
-      final result = await client.queryStkStatus(testCid);
+        final result = await client.queryStkStatus(testCid);
 
-      expect(result.isSuccess, isTrue);
-      expect(result.resultCode, 0);
-    });
+        expect(result.isSuccess, isTrue);
+        expect(result.resultCode, 0);
+      },
+    );
 
-    test('returns PaymentResult with isCancelled=true on user cancellation', () async {
-      when(() => mockHttp.post(any(),
-              headers: any(named: 'headers'), body: any(named: 'body')))
-          .thenAnswer((_) async => stkQueryCancelled());
+    test(
+      'returns PaymentResult with isCancelled=true on user cancellation',
+      () async {
+        when(
+          () => mockHttp.post(
+            any(),
+            headers: any(named: 'headers'),
+            body: any(named: 'body'),
+          ),
+        ).thenAnswer((_) async => stkQueryCancelled());
 
-      final result = await client.queryStkStatus(testCid);
+        final result = await client.queryStkStatus(testCid);
 
-      expect(result.isCancelled, isTrue);
-      expect(result.resultCode, 1032);
-    });
+        expect(result.isCancelled, isTrue);
+        expect(result.resultCode, 1032);
+      },
+    );
 
     test('throws DarajaException with statusCode on non-200 response', () {
-      when(() => mockHttp.post(any(),
-              headers: any(named: 'headers'), body: any(named: 'body')))
-          .thenAnswer((_) async => apiError(503));
+      when(
+        () => mockHttp.post(
+          any(),
+          headers: any(named: 'headers'),
+          body: any(named: 'body'),
+        ),
+      ).thenAnswer((_) async => apiError(503));
 
       expect(
         () => client.queryStkStatus(testCid),
-        throwsA(isA<DarajaException>()
-            .having((e) => e.statusCode, 'statusCode', 503)),
+        throwsA(
+          isA<DarajaException>().having((e) => e.statusCode, 'statusCode', 503),
+        ),
       );
     });
 
     test('sends CheckoutRequestID in request body', () async {
-      when(() => mockHttp.post(any(),
-              headers: any(named: 'headers'), body: any(named: 'body')))
-          .thenAnswer((_) async => stkQuerySuccess());
+      when(
+        () => mockHttp.post(
+          any(),
+          headers: any(named: 'headers'),
+          body: any(named: 'body'),
+        ),
+      ).thenAnswer((_) async => stkQuerySuccess());
 
       await client.queryStkStatus('ws_CO_specific_99');
 
