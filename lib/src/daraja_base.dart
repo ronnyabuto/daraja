@@ -34,14 +34,13 @@ final class Daraja {
     required String reference,
     required String description,
     required String userId,
-  }) =>
-      _notifier.initiate(
-        phone: phone,
-        amount: amount,
-        reference: reference,
-        description: description,
-        userId: userId,
-      );
+  }) => _notifier.initiate(
+    phone: phone,
+    amount: amount,
+    reference: reference,
+    description: description,
+    userId: userId,
+  );
 
   void dispose() => _notifier.dispose();
 }

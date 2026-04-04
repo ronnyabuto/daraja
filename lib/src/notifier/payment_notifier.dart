@@ -22,10 +22,10 @@ class PaymentNotifier with WidgetsBindingObserver {
     required Databases databases,
     required Realtime realtime,
     required DarajaClient darajaClient,
-  })  : _config = config,
-        _databases = databases,
-        _realtime = realtime,
-        _darajaClient = darajaClient;
+  }) : _config = config,
+       _databases = databases,
+       _realtime = realtime,
+       _darajaClient = darajaClient;
 
   final DarajaConfig _config;
   final Databases _databases;
@@ -50,10 +50,7 @@ class PaymentNotifier with WidgetsBindingObserver {
     if (cid == null) return;
 
     _pendingCid = cid;
-    _emit(PaymentPending(
-      checkoutRequestId: cid,
-      initiatedAt: DateTime.now(),
-    ));
+    _emit(PaymentPending(checkoutRequestId: cid, initiatedAt: DateTime.now()));
 
     // Open subscription first so poll() has a live database connection.
     _openSubscription(cid);
@@ -99,10 +96,7 @@ class PaymentNotifier with WidgetsBindingObserver {
     final prefs = SharedPreferencesAsync();
     await prefs.setString(_prefKey, cid);
 
-    _emit(PaymentPending(
-      checkoutRequestId: cid,
-      initiatedAt: _initiatedAt!,
-    ));
+    _emit(PaymentPending(checkoutRequestId: cid, initiatedAt: _initiatedAt!));
 
     _openSubscription(cid);
     _schedulePolls(cid);
@@ -127,10 +121,7 @@ class PaymentNotifier with WidgetsBindingObserver {
       checkoutRequestId: cid,
     );
 
-    _subscription!.stream.listen(
-      _onTerminal,
-      onError: (_) {},
-    );
+    _subscription!.stream.listen(_onTerminal, onError: (_) {});
   }
 
   void _schedulePolls(String cid) {

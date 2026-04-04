@@ -9,8 +9,8 @@ import 'token_cache.dart';
 
 class DarajaClient {
   DarajaClient(this._config, {http.Client? httpClient})
-      : _http = httpClient ?? http.Client(),
-        _cache = TokenCache();
+    : _http = httpClient ?? http.Client(),
+      _cache = TokenCache();
 
   final DarajaConfig _config;
   final http.Client _http;
@@ -24,7 +24,9 @@ class DarajaClient {
     required String userId,
   }) async {
     _validate(amount: amount, reference: reference, description: description);
-    final normalised = _normalisePhone(phone); // Validate before any network call.
+    final normalised = _normalisePhone(
+      phone,
+    ); // Validate before any network call.
 
     final token = await _getToken();
     final timestamp = _eatTimestamp();
@@ -118,10 +120,7 @@ class DarajaClient {
     );
 
     if (response.statusCode != 200) {
-      throw DarajaException(
-        'OAuth failed',
-        statusCode: response.statusCode,
-      );
+      throw DarajaException('OAuth failed', statusCode: response.statusCode);
     }
 
     final body = jsonDecode(response.body) as Map<String, dynamic>;
@@ -160,8 +159,7 @@ class DarajaClient {
         phone.length == 10) {
       return '254${phone.substring(1)}';
     }
-    if ((phone.startsWith('7') || phone.startsWith('1')) &&
-        phone.length == 9) {
+    if ((phone.startsWith('7') || phone.startsWith('1')) && phone.length == 9) {
       return '254$phone';
     }
 
@@ -178,11 +176,17 @@ class DarajaClient {
     }
     if (reference.length > 12) {
       throw ArgumentError.value(
-          reference, 'reference', 'exceeds 12 character limit');
+        reference,
+        'reference',
+        'exceeds 12 character limit',
+      );
     }
     if (description.length > 13) {
       throw ArgumentError.value(
-          description, 'description', 'exceeds 13 character limit');
+        description,
+        'description',
+        'exceeds 13 character limit',
+      );
     }
   }
 

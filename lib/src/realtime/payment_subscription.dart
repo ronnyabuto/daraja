@@ -11,10 +11,10 @@ class PaymentSubscription {
     required Realtime realtime,
     required DarajaConfig config,
     required String checkoutRequestId,
-  })  : _databases = databases,
-        _realtime = realtime,
-        _config = config,
-        _checkoutRequestId = checkoutRequestId;
+  }) : _databases = databases,
+       _realtime = realtime,
+       _config = config,
+       _checkoutRequestId = checkoutRequestId;
 
   final Databases _databases;
   final Realtime _realtime;
@@ -36,10 +36,7 @@ class PaymentSubscription {
       );
       if (!isRelevant) continue;
 
-      final state = _parseDocument(
-        message.payload,
-        _checkoutRequestId,
-      );
+      final state = _parseDocument(message.payload, _checkoutRequestId);
       if (state != null) {
         yield state;
         return;
@@ -77,16 +74,16 @@ PaymentState? _parseDocument(
   final status = data['status'] as String?;
   return switch (status) {
     'SUCCESS' => PaymentSuccess(
-        checkoutRequestId: checkoutRequestId,
-        receiptNumber: data['receipt'] as String,
-        amount: data['amount'] as int,
-        settledAt: DateTime.parse(data['settledAt'] as String),
-      ),
+      checkoutRequestId: checkoutRequestId,
+      receiptNumber: data['receipt'] as String,
+      amount: data['amount'] as int,
+      settledAt: DateTime.parse(data['settledAt'] as String),
+    ),
     'FAILED' => PaymentFailed(
-        checkoutRequestId: checkoutRequestId,
-        resultCode: data['resultCode'] as int,
-        message: data['failureReason'] as String? ?? '',
-      ),
+      checkoutRequestId: checkoutRequestId,
+      resultCode: data['resultCode'] as int,
+      message: data['failureReason'] as String? ?? '',
+    ),
     'CANCELLED' => PaymentCancelled(checkoutRequestId: checkoutRequestId),
     'TIMEOUT' => PaymentTimeout(checkoutRequestId: checkoutRequestId),
     _ => null,
