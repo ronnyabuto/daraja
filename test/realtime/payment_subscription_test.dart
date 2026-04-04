@@ -13,8 +13,6 @@ class _MockDatabases extends Mock implements Databases {}
 
 class _MockRealtime extends Mock implements Realtime {}
 
-class _MockRealtimeSubscription extends Mock implements RealtimeSubscription {}
-
 void main() {
   late _MockDatabases mockDatabases;
   late _MockRealtime mockRealtime;
@@ -97,6 +95,7 @@ void main() {
             documentId: any(named: 'documentId'),
           )).thenAnswer((_) async => appwrite_models.Document(
             $id: testCid,
+            $sequence: '1',
             $collectionId: 'transactions',
             $databaseId: 'payments',
             $createdAt: now.toIso8601String(),
@@ -146,16 +145,16 @@ void main() {
 
   group('stream', () {
     late StreamController<RealtimeMessage> realtimeController;
-    late _MockRealtimeSubscription mockRealtimeSub;
 
     setUp(() {
       realtimeController = StreamController<RealtimeMessage>();
-      mockRealtimeSub = _MockRealtimeSubscription();
-
-      when(() => mockRealtimeSub.stream)
-          .thenAnswer((_) => realtimeController.stream);
-      when(() => mockRealtimeSub.close()).thenReturn(null);
-      when(() => mockRealtime.subscribe(any())).thenReturn(mockRealtimeSub);
+      final sub = RealtimeSubscription(
+        controller: realtimeController,
+        close: () async {},
+        channels: [],
+        queries: [],
+      );
+      when(() => mockRealtime.subscribe(any())).thenReturn(sub);
     });
 
     tearDown(() => realtimeController.close());
@@ -170,7 +169,7 @@ void main() {
       final captured = verify(
         () => mockRealtime.subscribe(captureAny()),
       ).captured;
-      final channels = captured.single as List<String>;
+      final channels = (captured.single as List<Object>).cast<String>();
       expect(
         channels.single,
         'databases.${testConfig.appwriteDatabaseId}.collections.${testConfig.appwriteCollectionId}.documents.$testCid',

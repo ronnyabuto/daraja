@@ -24,10 +24,10 @@ class DarajaClient {
     required String userId,
   }) async {
     _validate(amount: amount, reference: reference, description: description);
+    final normalised = _normalisePhone(phone); // Validate before any network call.
 
     final token = await _getToken();
     final timestamp = _eatTimestamp();
-    final normalised = _normalisePhone(phone);
 
     final response = await _http.post(
       Uri.parse('${_config.baseUrl}/mpesa/stkpush/v1/processrequest'),

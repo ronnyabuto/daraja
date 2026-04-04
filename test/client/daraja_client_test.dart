@@ -147,13 +147,13 @@ void main() {
   });
 
   group('STK Push — phone normalisation', () {
-    void stubAndVerifyPhone(String input, String expected) {
+    Future<void> stubAndVerifyPhone(String input, String expected) async {
       stubOauth();
       when(() => mockHttp.post(any(),
               headers: any(named: 'headers'), body: any(named: 'body')))
           .thenAnswer((_) async => stkPushSuccess());
 
-      client.initiateStkPush(
+      await client.initiateStkPush(
         phone: input, amount: 100, reference: 'REF', description: 'Test',
         userId: testUserId,
       );
@@ -164,37 +164,38 @@ void main() {
       expect(body['PartyA'], expected);
     }
 
-    test('normalises 07XXXXXXXX format', () {
-      stubAndVerifyPhone('0712345678', '254712345678');
+    test('normalises 07XXXXXXXX format', () async {
+      await stubAndVerifyPhone('0712345678', '254712345678');
     });
 
-    test('normalises 01XXXXXXXX format', () {
-      stubAndVerifyPhone('0112345678', '254112345678');
+    test('normalises 01XXXXXXXX format', () async {
+      await stubAndVerifyPhone('0112345678', '254112345678');
     });
 
-    test('normalises 7XXXXXXXX (9-digit) format', () {
-      stubAndVerifyPhone('712345678', '254712345678');
+    test('normalises 7XXXXXXXX (9-digit) format', () async {
+      await stubAndVerifyPhone('712345678', '254712345678');
     });
 
-    test('normalises 1XXXXXXXX (9-digit) format', () {
-      stubAndVerifyPhone('112345678', '254112345678');
+    test('normalises 1XXXXXXXX (9-digit) format', () async {
+      await stubAndVerifyPhone('112345678', '254112345678');
     });
 
-    test('normalises +254XXXXXXXXX format', () {
-      stubAndVerifyPhone('+254712345678', '254712345678');
+    test('normalises +254XXXXXXXXX format', () async {
+      await stubAndVerifyPhone('+254712345678', '254712345678');
     });
 
-    test('normalises 254XXXXXXXXX format — pass-through', () {
-      stubAndVerifyPhone('254712345678', '254712345678');
+    test('normalises 254XXXXXXXXX format — pass-through', () async {
+      await stubAndVerifyPhone('254712345678', '254712345678');
     });
 
-    test('strips surrounding whitespace before normalising', () {
-      stubAndVerifyPhone('  0712345678  ', '254712345678');
+    test('strips surrounding whitespace before normalising', () async {
+      await stubAndVerifyPhone('  0712345678  ', '254712345678');
     });
 
-    test('throws FormatException for unrecognisable phone format', () {
-      expect(
-        () => client.initiateStkPush(
+    test('throws FormatException for unrecognisable phone format', () async {
+      // _normalisePhone runs before any network call, so OAuth must never fire.
+      await expectLater(
+        client.initiateStkPush(
           phone: '12345',
           amount: 100,
           reference: 'REF',

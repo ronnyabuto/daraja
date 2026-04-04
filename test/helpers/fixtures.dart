@@ -96,6 +96,7 @@ appwrite_models.Document successDocument({
   final settled = settledAt ?? DateTime.utc(2026, 3, 31, 12, 0, 0);
   return appwrite_models.Document(
     $id: cid,
+    $sequence: '1',
     $collectionId: 'transactions',
     $databaseId: 'payments',
     $createdAt: settled.toIso8601String(),
@@ -121,6 +122,7 @@ appwrite_models.Document failedDocument({
   final now = DateTime.utc(2026, 3, 31, 12, 0, 0);
   return appwrite_models.Document(
     $id: cid,
+    $sequence: '1',
     $collectionId: 'transactions',
     $databaseId: 'payments',
     $createdAt: now.toIso8601String(),
@@ -142,6 +144,7 @@ appwrite_models.Document cancelledDocument({String cid = testCid}) {
   final now = DateTime.utc(2026, 3, 31, 12, 0, 0);
   return appwrite_models.Document(
     $id: cid,
+    $sequence: '1',
     $collectionId: 'transactions',
     $databaseId: 'payments',
     $createdAt: now.toIso8601String(),
@@ -163,6 +166,7 @@ appwrite_models.Document timeoutDocument({String cid = testCid}) {
   final now = DateTime.utc(2026, 3, 31, 12, 0, 0);
   return appwrite_models.Document(
     $id: cid,
+    $sequence: '1',
     $collectionId: 'transactions',
     $databaseId: 'payments',
     $createdAt: now.toIso8601String(),
