@@ -6,16 +6,23 @@ import 'package:dart_appwrite/dart_appwrite.dart';
 Future<dynamic> main(final context) async {
   Map<String, dynamic> payload;
   try {
-    payload = jsonDecode(context.req.bodyText as String) as Map<String, dynamic>;
+    payload =
+        jsonDecode(context.req.bodyText as String) as Map<String, dynamic>;
   } catch (_) {
     context.error('Unparseable callback body: ${context.req.bodyText}');
-    return context.res.json({'ResultCode': 1, 'ResultDesc': 'Invalid payload'}, 400);
+    return context.res.json({
+      'ResultCode': 1,
+      'ResultDesc': 'Invalid payload',
+    }, 400);
   }
 
   final stkCallback = payload['Body']?['stkCallback'] as Map<String, dynamic>?;
   if (stkCallback == null) {
     context.error('Missing Body.stkCallback');
-    return context.res.json({'ResultCode': 1, 'ResultDesc': 'Malformed payload'}, 400);
+    return context.res.json({
+      'ResultCode': 1,
+      'ResultDesc': 'Malformed payload',
+    }, 400);
   }
 
   final checkoutRequestId = stkCallback['CheckoutRequestID'] as String;
@@ -30,17 +37,19 @@ Future<dynamic> main(final context) async {
   if (isSuccess) {
     final items = (stkCallback['CallbackMetadata']?['Item'] as List?)
         ?.cast<Map<String, dynamic>>();
-    receipt = items
-        ?.firstWhere(
-          (i) => i['Name'] == 'MpesaReceiptNumber',
-          orElse: () => {'Value': null},
-        )['Value'] as String?;
-    amount = (items
-            ?.firstWhere(
-              (i) => i['Name'] == 'Amount',
+    receipt =
+        items?.firstWhere(
+              (i) => i['Name'] == 'MpesaReceiptNumber',
               orElse: () => {'Value': null},
-            )['Value'] as num?)
-        ?.toInt();
+            )['Value']
+            as String?;
+    amount =
+        (items?.firstWhere(
+                  (i) => i['Name'] == 'Amount',
+                  orElse: () => {'Value': null},
+                )['Value']
+                as num?)
+            ?.toInt();
   }
 
   final client = Client()
@@ -70,7 +79,9 @@ Future<dynamic> main(final context) async {
       },
       permissions: permissions,
     );
-    context.log('Processed $checkoutRequestId → ${isSuccess ? 'SUCCESS' : 'resultCode=$resultCode'}');
+    context.log(
+      'Processed $checkoutRequestId → ${isSuccess ? 'SUCCESS' : 'resultCode=$resultCode'}',
+    );
   } on AppwriteException catch (e) {
     if (e.code == 409) {
       context.log('Duplicate callback for $checkoutRequestId — ignored');
@@ -85,7 +96,7 @@ Future<dynamic> main(final context) async {
 }
 
 String _mapStatus(int code) => switch (code) {
-      1032 => 'CANCELLED',
-      1037 => 'TIMEOUT',
-      _ => 'FAILED',
-    };
+  1032 => 'CANCELLED',
+  1037 => 'TIMEOUT',
+  _ => 'FAILED',
+};

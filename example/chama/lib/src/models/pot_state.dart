@@ -7,8 +7,8 @@ class PotState {
   });
 
   const PotState.empty({required this.target, required this.memberCount})
-      : collected = 0,
-        paidCount = 0;
+    : collected = 0,
+      paidCount = 0;
 
   final int collected;
   final int target;
@@ -20,9 +20,9 @@ class PotState {
   double get progress => target == 0 ? 0 : collected / target;
 
   PotState withPayment(int amount) => PotState(
-        collected: collected + amount,
-        target: target,
-        paidCount: paidCount + 1,
-        memberCount: memberCount,
-      );
+    collected: collected + amount,
+    target: target,
+    paidCount: paidCount + 1,
+    memberCount: memberCount,
+  );
 }

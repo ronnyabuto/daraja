@@ -30,9 +30,7 @@ final class DarajaConfig {
   final String callbackDomain;
 
   String get baseUrl => switch (environment) {
-        DarajaEnvironment.sandbox =>
-          'https://sandbox.safaricom.co.ke',
-        DarajaEnvironment.production =>
-          'https://api.safaricom.co.ke',
-      };
+    DarajaEnvironment.sandbox => 'https://sandbox.safaricom.co.ke',
+    DarajaEnvironment.production => 'https://api.safaricom.co.ke',
+  };
 }

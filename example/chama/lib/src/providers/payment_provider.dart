@@ -32,7 +32,9 @@ class MemberPaymentNotifier extends AutoDisposeAsyncNotifier<PaymentState> {
 }
 
 /// One provider per member — keyed by [ChamaMember.id].
-final memberPaymentProvider = AutoDisposeAsyncNotifierProvider.family<
-    MemberPaymentNotifier, PaymentState, String>(
-  MemberPaymentNotifier.new,
-);
+final memberPaymentProvider =
+    AutoDisposeAsyncNotifierProvider.family<
+      MemberPaymentNotifier,
+      PaymentState,
+      String
+    >(MemberPaymentNotifier.new);

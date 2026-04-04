@@ -23,69 +23,71 @@ const testUserId = 'user_abc123';
 const testReceipt = 'NLJ7RT61SV';
 
 http.Response oauthSuccess() => http.Response(
-      jsonEncode({'access_token': 'test_access_token', 'expires_in': '3599'}),
-      200,
-    );
+  jsonEncode({'access_token': 'test_access_token', 'expires_in': '3599'}),
+  200,
+);
 
 http.Response stkPushSuccess([String cid = testCid]) => http.Response(
-      jsonEncode({
-        'MerchantRequestID': 'mr_29115-34620561-1',
-        'CheckoutRequestID': cid,
-        'ResponseCode': '0',
-        'ResponseDescription': 'Success. Request accepted for processing',
-        'CustomerMessage': 'Success. Request accepted for processing',
-      }),
-      200,
-    );
+  jsonEncode({
+    'MerchantRequestID': 'mr_29115-34620561-1',
+    'CheckoutRequestID': cid,
+    'ResponseCode': '0',
+    'ResponseDescription': 'Success. Request accepted for processing',
+    'CustomerMessage': 'Success. Request accepted for processing',
+  }),
+  200,
+);
 
 http.Response stkPushRejected() => http.Response(
-      jsonEncode({
-        'ResponseCode': '1',
-        'ResponseDescription': 'The balance is insufficient for the transaction',
-      }),
-      200,
-    );
+  jsonEncode({
+    'ResponseCode': '1',
+    'ResponseDescription': 'The balance is insufficient for the transaction',
+  }),
+  200,
+);
 
-http.Response apiError(int statusCode, [String message = 'Internal Server Error']) =>
-    http.Response(
-      jsonEncode({'errorCode': 'SERVER_ERROR', 'errorMessage': message}),
-      statusCode,
-    );
+http.Response apiError(
+  int statusCode, [
+  String message = 'Internal Server Error',
+]) => http.Response(
+  jsonEncode({'errorCode': 'SERVER_ERROR', 'errorMessage': message}),
+  statusCode,
+);
 
 http.Response stkQueryPending() => http.Response(
-      jsonEncode({
-        'ResponseCode': '0',
-        'ResponseDescription': 'The service request has been accepted',
-        'MerchantRequestID': 'mr_123',
-        'CheckoutRequestID': testCid,
-        'ResultCode': '17',
-        'ResultDesc': 'Request is being processed',
-      }),
-      200,
-    );
+  jsonEncode({
+    'ResponseCode': '0',
+    'ResponseDescription': 'The service request has been accepted',
+    'MerchantRequestID': 'mr_123',
+    'CheckoutRequestID': testCid,
+    'ResultCode': '17',
+    'ResultDesc': 'Request is being processed',
+  }),
+  200,
+);
 
 http.Response stkQuerySuccess() => http.Response(
-      jsonEncode({
-        'ResponseCode': '0',
-        'ResponseDescription': 'The service request has been accepted',
-        'MerchantRequestID': 'mr_123',
-        'CheckoutRequestID': testCid,
-        'ResultCode': '0',
-        'ResultDesc': 'The service request is processed successfully.',
-      }),
-      200,
-    );
+  jsonEncode({
+    'ResponseCode': '0',
+    'ResponseDescription': 'The service request has been accepted',
+    'MerchantRequestID': 'mr_123',
+    'CheckoutRequestID': testCid,
+    'ResultCode': '0',
+    'ResultDesc': 'The service request is processed successfully.',
+  }),
+  200,
+);
 
 http.Response stkQueryCancelled() => http.Response(
-      jsonEncode({
-        'ResponseCode': '0',
-        'MerchantRequestID': 'mr_123',
-        'CheckoutRequestID': testCid,
-        'ResultCode': '1032',
-        'ResultDesc': 'Request cancelled by user.',
-      }),
-      200,
-    );
+  jsonEncode({
+    'ResponseCode': '0',
+    'MerchantRequestID': 'mr_123',
+    'CheckoutRequestID': testCid,
+    'ResultCode': '1032',
+    'ResultDesc': 'Request cancelled by user.',
+  }),
+  200,
+);
 
 appwrite_models.Document successDocument({
   String cid = testCid,
@@ -208,9 +210,7 @@ RealtimeMessage realtimeMessage({
       'failureReason': failureReason,
       'settledAt': now.toIso8601String(),
     },
-    channels: [
-      'databases.payments.collections.transactions.documents.$cid',
-    ],
+    channels: ['databases.payments.collections.transactions.documents.$cid'],
     timestamp: now.toIso8601String(),
   );
 }
