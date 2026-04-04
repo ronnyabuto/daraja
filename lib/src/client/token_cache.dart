@@ -1,3 +1,5 @@
+import 'package:clock/clock.dart';
+
 final class TokenCache {
   String? _token;
   DateTime? _expiresAt;
@@ -6,7 +8,7 @@ final class TokenCache {
 
   String? get token {
     if (_token == null || _expiresAt == null) return null;
-    if (DateTime.now().isAfter(_expiresAt!)) {
+    if (clock.now().isAfter(_expiresAt!)) {
       _token = null;
       _expiresAt = null;
       return null;
@@ -16,7 +18,7 @@ final class TokenCache {
 
   void store(String token, int expiresInSeconds) {
     _token = token;
-    _expiresAt = DateTime.now().add(
+    _expiresAt = clock.now().add(
       Duration(seconds: expiresInSeconds - _bufferSeconds),
     );
   }

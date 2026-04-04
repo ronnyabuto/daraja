@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:appwrite/appwrite.dart';
 
 import '../models/daraja_config.dart';
@@ -62,7 +64,10 @@ class PaymentSubscription {
     }
   }
 
-  void close() => _subscription?.close();
+  void close() {
+    final sub = _subscription;
+    if (sub != null) unawaited(sub.close());
+  }
 }
 
 PaymentState? _parseDocument(

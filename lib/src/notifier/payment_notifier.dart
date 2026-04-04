@@ -55,10 +55,12 @@ class PaymentNotifier with WidgetsBindingObserver {
       initiatedAt: DateTime.now(),
     ));
 
+    // Open subscription first so poll() has a live database connection.
+    _openSubscription(cid);
+
     final resolved = await _pollNow(cid);
     if (resolved) return;
 
-    _openSubscription(cid);
     _scheduleTimeout(cid);
   }
 
