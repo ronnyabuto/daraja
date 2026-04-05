@@ -1,6 +1,8 @@
 import 'dart:convert';
 
 import 'package:daraja/src/client/daraja_client.dart';
+import 'package:daraja/src/models/b2c_command_id.dart';
+import 'package:daraja/src/models/daraja_config.dart';
 import 'package:daraja/src/models/daraja_exception.dart';
 import 'package:daraja/src/models/payment_result.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -661,6 +663,241 @@ void main() {
         );
       },
     );
+  });
+
+  group('B2C — initiateB2c()', () {
+    late DarajaClient b2cClient;
+
+    setUp(() {
+      // Use a config with b2cCollectionId for these tests.
+      b2cClient = DarajaClient(
+        const DarajaConfig(
+          consumerKey: 'test_consumer_key',
+          consumerSecret: 'test_consumer_secret',
+          passkey: 'test_passkey',
+          shortcode: '174379',
+          environment: DarajaEnvironment.sandbox,
+          appwriteEndpoint: 'https://cloud.appwrite.io/v1',
+          appwriteProjectId: 'test_project',
+          appwriteDatabaseId: 'payments',
+          appwriteCollectionId: 'transactions',
+          callbackDomain: 'https://fn.appwrite.run',
+          b2cCollectionId: 'disbursements',
+        ),
+        httpClient: mockHttp,
+      );
+      stubOauth();
+    });
+
+    tearDown(() => b2cClient.close());
+
+    Future<void> initiateB2c({
+      String phone = '0712345678',
+      int amount = 500,
+      String commandId = 'BusinessPayment',
+    }) => b2cClient.initiateB2c(
+      originatorConversationId: testOriginatorConversationId,
+      phone: phone,
+      amount: amount,
+      initiatorName: 'TestInitiator',
+      securityCredential: 'base64credential==',
+      commandId: B2cCommandId.businessPayment,
+      remarks: 'Test payout',
+      userId: testUserId,
+    );
+
+    Map<String, dynamic> captureB2cBody() {
+      final captured = verify(
+        () => mockHttp.post(
+          any(),
+          headers: any(named: 'headers'),
+          body: captureAny(named: 'body'),
+        ),
+      ).captured;
+      return jsonDecode(captured.single as String) as Map<String, dynamic>;
+    }
+
+    test('completes without throwing on a successful response', () async {
+      when(
+        () => mockHttp.post(
+          any(),
+          headers: any(named: 'headers'),
+          body: any(named: 'body'),
+        ),
+      ).thenAnswer((_) async => b2cSuccess());
+
+      await expectLater(initiateB2c(), completes);
+    });
+
+    test('sends correct request body fields', () async {
+      when(
+        () => mockHttp.post(
+          any(),
+          headers: any(named: 'headers'),
+          body: any(named: 'body'),
+        ),
+      ).thenAnswer((_) async => b2cSuccess());
+
+      await initiateB2c();
+
+      final body = captureB2cBody();
+      expect(body['OriginatorConversationID'], testOriginatorConversationId);
+      expect(body['InitiatorName'], 'TestInitiator');
+      expect(body['SecurityCredential'], 'base64credential==');
+      expect(body['CommandID'], 'BusinessPayment');
+      expect(body['Amount'], 500);
+      expect(body['PartyA'], testConfig.shortcode);
+      expect(body['PartyB'], '254712345678');
+      expect(body['Remarks'], 'Test payout');
+    });
+
+    test(
+      'constructs ResultURL and QueueTimeOutURL with domain and userId',
+      () async {
+        when(
+          () => mockHttp.post(
+            any(),
+            headers: any(named: 'headers'),
+            body: any(named: 'body'),
+          ),
+        ).thenAnswer((_) async => b2cSuccess());
+
+        await initiateB2c();
+
+        final body = captureB2cBody();
+        expect(
+          body['ResultURL'],
+          '${testConfig.callbackDomain}/b2c/result?uid=$testUserId',
+        );
+        expect(
+          body['QueueTimeOutURL'],
+          '${testConfig.callbackDomain}/b2c/timeout?uid=$testUserId',
+        );
+      },
+    );
+
+    test('posts to the B2C v3 endpoint', () async {
+      when(
+        () => mockHttp.post(
+          any(),
+          headers: any(named: 'headers'),
+          body: any(named: 'body'),
+        ),
+      ).thenAnswer((_) async => b2cSuccess());
+
+      await initiateB2c();
+
+      final captured = verify(
+        () => mockHttp.post(
+          captureAny(),
+          headers: any(named: 'headers'),
+          body: any(named: 'body'),
+        ),
+      ).captured;
+      final uri = captured.single as Uri;
+      expect(uri.path, '/mpesa/b2c/v3/paymentrequest');
+    });
+
+    test(
+      'throws B2cRejectedError with responseCode on non-zero ResponseCode',
+      () async {
+        when(
+          () => mockHttp.post(
+            any(),
+            headers: any(named: 'headers'),
+            body: any(named: 'body'),
+          ),
+        ).thenAnswer((_) async => b2cRejected());
+
+        await expectLater(
+          initiateB2c(),
+          throwsA(
+            isA<B2cRejectedError>().having(
+              (e) => e.responseCode,
+              'responseCode',
+              '2001',
+            ),
+          ),
+        );
+      },
+    );
+
+    test('throws DarajaException on non-200 HTTP status', () async {
+      when(
+        () => mockHttp.post(
+          any(),
+          headers: any(named: 'headers'),
+          body: any(named: 'body'),
+        ),
+      ).thenAnswer((_) async => apiError(500));
+
+      await expectLater(
+        initiateB2c(),
+        throwsA(
+          isA<DarajaException>().having((e) => e.statusCode, 'statusCode', 500),
+        ),
+      );
+    });
+
+    test('throws ArgumentError for amount of zero', () {
+      expect(() => initiateB2c(amount: 0), throwsA(isA<ArgumentError>()));
+      // Validation runs before any network call.
+      verifyNever(
+        () => mockHttp.post(
+          any(),
+          headers: any(named: 'headers'),
+          body: any(named: 'body'),
+        ),
+      );
+    });
+
+    test('omits Occasion field when not provided', () async {
+      when(
+        () => mockHttp.post(
+          any(),
+          headers: any(named: 'headers'),
+          body: any(named: 'body'),
+        ),
+      ).thenAnswer((_) async => b2cSuccess());
+
+      await initiateB2c();
+
+      final body = captureB2cBody();
+      expect(body.containsKey('Occasion'), isFalse);
+    });
+
+    test('includes Occasion field when provided', () async {
+      when(
+        () => mockHttp.post(
+          any(),
+          headers: any(named: 'headers'),
+          body: any(named: 'body'),
+        ),
+      ).thenAnswer((_) async => b2cSuccess());
+
+      await b2cClient.initiateB2c(
+        originatorConversationId: testOriginatorConversationId,
+        phone: '0712345678',
+        amount: 500,
+        initiatorName: 'TestInitiator',
+        securityCredential: 'base64credential==',
+        commandId: B2cCommandId.businessPayment,
+        remarks: 'Test payout',
+        occasion: 'March Bonus',
+        userId: testUserId,
+      );
+
+      final body = captureB2cBody();
+      expect(body['Occasion'], 'March Bonus');
+    });
+  });
+
+  group('B2cCommandId', () {
+    test('toApiString returns correct Safaricom API strings', () {
+      expect(B2cCommandId.businessPayment.toApiString(), 'BusinessPayment');
+      expect(B2cCommandId.salaryPayment.toApiString(), 'SalaryPayment');
+      expect(B2cCommandId.promotionPayment.toApiString(), 'PromotionPayment');
+    });
   });
 
   group('STK Query', () {
