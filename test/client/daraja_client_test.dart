@@ -151,6 +151,44 @@ void main() {
       );
     });
 
+    test('throws DarajaAuthError on OAuth 401', () async {
+      when(
+        () => mockHttp.get(any(), headers: any(named: 'headers')),
+      ).thenAnswer((_) async => apiError(401, 'Unauthorized'));
+
+      await expectLater(
+        client.initiateStkPush(
+          phone: '0712345678',
+          amount: 100,
+          reference: 'R',
+          description: 'D',
+          userId: testUserId,
+        ),
+        throwsA(
+          isA<DarajaAuthError>().having((e) => e.statusCode, 'statusCode', 401),
+        ),
+      );
+    });
+
+    test('throws DarajaAuthError on OAuth 403', () async {
+      when(
+        () => mockHttp.get(any(), headers: any(named: 'headers')),
+      ).thenAnswer((_) async => apiError(403, 'Forbidden'));
+
+      await expectLater(
+        client.initiateStkPush(
+          phone: '0712345678',
+          amount: 100,
+          reference: 'R',
+          description: 'D',
+          userId: testUserId,
+        ),
+        throwsA(
+          isA<DarajaAuthError>().having((e) => e.statusCode, 'statusCode', 403),
+        ),
+      );
+    });
+
     test('hits the correct sandbox OAuth URL', () async {
       stubOauth();
       when(
@@ -563,6 +601,66 @@ void main() {
         throwsA(isA<DarajaException>()),
       );
     });
+
+    test(
+      'throws StkPushRejectedError with responseCode when ResponseCode is non-zero',
+      () async {
+        when(
+          () => mockHttp.post(
+            any(),
+            headers: any(named: 'headers'),
+            body: any(named: 'body'),
+          ),
+        ).thenAnswer((_) async => stkPushRejected());
+
+        await expectLater(
+          client.initiateStkPush(
+            phone: '0712345678',
+            amount: 100,
+            reference: 'REF',
+            description: 'Test',
+            userId: testUserId,
+          ),
+          throwsA(
+            isA<StkPushRejectedError>().having(
+              (e) => e.responseCode,
+              'responseCode',
+              '1',
+            ),
+          ),
+        );
+      },
+    );
+
+    test(
+      'throws StkPushRejectedError with responseCode 1025 when transaction in progress',
+      () async {
+        when(
+          () => mockHttp.post(
+            any(),
+            headers: any(named: 'headers'),
+            body: any(named: 'body'),
+          ),
+        ).thenAnswer((_) async => stkPushTransactionInProgress());
+
+        await expectLater(
+          client.initiateStkPush(
+            phone: '0712345678',
+            amount: 100,
+            reference: 'REF',
+            description: 'Test',
+            userId: testUserId,
+          ),
+          throwsA(
+            isA<StkPushRejectedError>().having(
+              (e) => e.responseCode,
+              'responseCode',
+              '1025',
+            ),
+          ),
+        );
+      },
+    );
   });
 
   group('STK Query', () {

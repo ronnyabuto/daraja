@@ -32,6 +32,7 @@ void main() {
   group('poll()', () {
     void stubGetDocument(appwrite_models.Document doc) {
       when(
+        // ignore: deprecated_member_use
         () => mockDatabases.getDocument(
           databaseId: testConfig.appwriteDatabaseId,
           collectionId: testConfig.appwriteCollectionId,
@@ -63,6 +64,7 @@ void main() {
       () async {
         final now = DateTime.utc(2026, 3, 31, 12, 0, 0);
         when(
+          // ignore: deprecated_member_use
           () => mockDatabases.getDocument(
             databaseId: any(named: 'databaseId'),
             collectionId: any(named: 'collectionId'),
@@ -136,6 +138,7 @@ void main() {
       () async {
         final now = DateTime.utc(2026, 3, 31);
         when(
+          // ignore: deprecated_member_use
           () => mockDatabases.getDocument(
             databaseId: any(named: 'databaseId'),
             collectionId: any(named: 'collectionId'),
@@ -163,6 +166,7 @@ void main() {
       'returns null on 404 — document not yet written by the function',
       () async {
         when(
+          // ignore: deprecated_member_use
           () => mockDatabases.getDocument(
             databaseId: any(named: 'databaseId'),
             collectionId: any(named: 'collectionId'),
@@ -177,6 +181,7 @@ void main() {
 
     test('rethrows AppwriteException for non-404 errors', () async {
       when(
+        // ignore: deprecated_member_use
         () => mockDatabases.getDocument(
           databaseId: any(named: 'databaseId'),
           collectionId: any(named: 'collectionId'),
@@ -193,6 +198,7 @@ void main() {
       await subscription.poll();
 
       verify(
+        // ignore: deprecated_member_use
         () => mockDatabases.getDocument(
           databaseId: testConfig.appwriteDatabaseId,
           collectionId: testConfig.appwriteCollectionId,

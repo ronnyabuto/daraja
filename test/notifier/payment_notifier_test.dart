@@ -43,6 +43,7 @@ void main() {
 
   void stubDatabaseNotFound() {
     when(
+      // ignore: deprecated_member_use
       () => mockDatabases.getDocument(
         databaseId: any(named: 'databaseId'),
         collectionId: any(named: 'collectionId'),
@@ -76,7 +77,7 @@ void main() {
     realtimeController.close();
   });
 
-  Future<Stream<PaymentState>> _initiate() => notifier.initiate(
+  Future<Stream<PaymentState>> initiate() => notifier.initiate(
     phone: '0712345678',
     amount: 1000,
     reference: 'ORDER-001',
@@ -98,7 +99,7 @@ void main() {
       stubDatabaseNotFound();
 
       final statesFuture = notifier.stream.take(2).toList();
-      await _initiate();
+      await initiate();
       final states = await statesFuture;
 
       expect(states[0], isA<PaymentInitiating>());
@@ -120,7 +121,7 @@ void main() {
 
       final before = DateTime.now();
       final statesFuture = notifier.stream.take(2).toList();
-      await _initiate();
+      await initiate();
       final states = await statesFuture;
       final after = DateTime.now();
 
@@ -149,7 +150,7 @@ void main() {
       ).thenThrow(const DarajaException('OAuth failed', statusCode: 401));
 
       final statesFuture = notifier.stream.take(2).toList();
-      await _initiate();
+      await initiate();
       final states = await statesFuture;
 
       expect(states[0], isA<PaymentInitiating>());
@@ -171,7 +172,7 @@ void main() {
         ).thenThrow(const FormatException('Unrecognised phone format: 123'));
 
         final statesFuture = notifier.stream.take(2).toList();
-        await _initiate();
+        await initiate();
         final states = await statesFuture;
 
         expect(states[1], isA<PaymentError>());
@@ -194,7 +195,7 @@ void main() {
         );
 
         final statesFuture = notifier.stream.take(2).toList();
-        await _initiate();
+        await initiate();
         final states = await statesFuture;
 
         expect(states[1], isA<PaymentError>());
@@ -215,7 +216,7 @@ void main() {
         ).thenAnswer((_) async => testCid);
         stubDatabaseNotFound();
 
-        await _initiate();
+        await initiate();
 
         final prefs = SharedPreferencesAsync();
         expect(await prefs.getString('daraja_pending_cid'), testCid);
@@ -233,7 +234,7 @@ void main() {
         ),
       ).thenThrow(const DarajaException('Failed'));
 
-      await _initiate();
+      await initiate();
 
       final prefs = SharedPreferencesAsync();
       expect(await prefs.getString('daraja_pending_cid'), isNull);
@@ -256,7 +257,7 @@ void main() {
 
         final states = <PaymentState>[];
         notifier.stream.listen(states.add);
-        _initiate();
+        initiate();
 
         fake.flushMicrotasks();
         expect(states.length, 2); // Initiating + Pending
@@ -285,7 +286,7 @@ void main() {
         stubDatabaseNotFound();
 
         final states = <PaymentState>[];
-        _initiate().then((stream) => stream.listen(states.add));
+        initiate().then((stream) => stream.listen(states.add));
 
         fake.flushMicrotasks();
 
@@ -318,11 +319,12 @@ void main() {
         ).thenAnswer((_) async => testCid);
         stubDatabaseNotFound();
 
-        _initiate();
+        initiate();
         fake.flushMicrotasks();
 
         fake.elapse(const Duration(seconds: 10));
         verify(
+          // ignore: deprecated_member_use
           () => mockDatabases.getDocument(
             databaseId: any(named: 'databaseId'),
             collectionId: any(named: 'collectionId'),
@@ -332,6 +334,7 @@ void main() {
 
         fake.elapse(const Duration(seconds: 20));
         verify(
+          // ignore: deprecated_member_use
           () => mockDatabases.getDocument(
             databaseId: any(named: 'databaseId'),
             collectionId: any(named: 'collectionId'),
@@ -341,6 +344,7 @@ void main() {
 
         fake.elapse(const Duration(seconds: 40));
         verify(
+          // ignore: deprecated_member_use
           () => mockDatabases.getDocument(
             databaseId: any(named: 'databaseId'),
             collectionId: any(named: 'collectionId'),
@@ -363,7 +367,7 @@ void main() {
         ).thenAnswer((_) async => testCid);
         stubDatabaseNotFound();
 
-        _initiate();
+        initiate();
         fake.flushMicrotasks();
 
         // Resolve at T+5s via Realtime.
@@ -378,6 +382,7 @@ void main() {
         // Advance past all poll times — no further polls should fire.
         fake.elapse(const Duration(seconds: 100));
         verifyNever(
+          // ignore: deprecated_member_use
           () => mockDatabases.getDocument(
             databaseId: any(named: 'databaseId'),
             collectionId: any(named: 'collectionId'),
@@ -404,6 +409,7 @@ void main() {
 
         final successDoc = successDocument();
         when(
+          // ignore: deprecated_member_use
           () => mockDatabases.getDocument(
             databaseId: any(named: 'databaseId'),
             collectionId: any(named: 'collectionId'),
@@ -411,7 +417,7 @@ void main() {
           ),
         ).thenAnswer((_) async => successDoc);
 
-        final stream = await _initiate();
+        final stream = await initiate();
         await stream.firstWhere((s) => s is PaymentSuccess);
         await Future<void>.delayed(Duration.zero);
 
@@ -434,6 +440,7 @@ void main() {
         ).thenAnswer((_) async => testCid);
 
         when(
+          // ignore: deprecated_member_use
           () => mockDatabases.getDocument(
             databaseId: any(named: 'databaseId'),
             collectionId: any(named: 'collectionId'),
@@ -441,7 +448,7 @@ void main() {
           ),
         ).thenAnswer((_) async => successDocument());
 
-        final first = await _initiate();
+        final first = await initiate();
         await first.firstWhere((s) => s is PaymentSuccess);
         await Future<void>.delayed(Duration.zero);
 
@@ -449,7 +456,7 @@ void main() {
 
         // Second payment should start cleanly.
         final statesFuture = notifier.stream.take(2).toList();
-        await _initiate();
+        await initiate();
         final states = await statesFuture;
         expect(states[0], isA<PaymentInitiating>());
         expect(states[1], isA<PaymentPending>());
@@ -472,7 +479,7 @@ void main() {
         ).thenAnswer((_) async => testCid);
         stubDatabaseNotFound();
 
-        await _initiate();
+        await initiate();
         clearInteractions(mockDatabases);
         stubDatabaseNotFound();
 
@@ -480,6 +487,7 @@ void main() {
         await Future<void>.delayed(Duration.zero);
 
         verify(
+          // ignore: deprecated_member_use
           () => mockDatabases.getDocument(
             databaseId: any(named: 'databaseId'),
             collectionId: any(named: 'collectionId'),
@@ -494,6 +502,7 @@ void main() {
       await Future<void>.delayed(Duration.zero);
 
       verifyNever(
+        // ignore: deprecated_member_use
         () => mockDatabases.getDocument(
           databaseId: any(named: 'databaseId'),
           collectionId: any(named: 'collectionId'),
@@ -516,12 +525,13 @@ void main() {
         ).thenAnswer((_) async => testCid);
         stubDatabaseNotFound();
 
-        final stream = await _initiate();
+        final stream = await initiate();
         final states = <PaymentState>[];
         stream.listen(states.add);
 
         // Payment resolves while app was backgrounded.
         when(
+          // ignore: deprecated_member_use
           () => mockDatabases.getDocument(
             databaseId: any(named: 'databaseId'),
             collectionId: any(named: 'collectionId'),
@@ -576,6 +586,7 @@ void main() {
               'daraja_pending_cid': testCid,
             });
         when(
+          // ignore: deprecated_member_use
           () => mockDatabases.getDocument(
             databaseId: any(named: 'databaseId'),
             collectionId: any(named: 'collectionId'),
@@ -603,6 +614,7 @@ void main() {
               'daraja_pending_cid': testCid,
             });
         when(
+          // ignore: deprecated_member_use
           () => mockDatabases.getDocument(
             databaseId: any(named: 'databaseId'),
             collectionId: any(named: 'collectionId'),
