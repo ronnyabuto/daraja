@@ -67,6 +67,7 @@ Create a database and collection with this schema:
 | `receipt` | String (20) | No |
 | `amount` | Integer | No |
 | `failureReason` | String (255) | No |
+| `mpesaTimestamp` | String (50) | No |
 | `settledAt` | String (50) | Yes |
 
 ### 2. Deploy the function
@@ -108,6 +109,10 @@ final daraja = Daraja(
   ),
 );
 
+// Subscribe to the global payment stream before restoring — states emitted
+// by restorePendingPayment() arrive on this same stream.
+daraja.stream.listen((state) { /* update UI */ });
+
 // On app startup — restore any payment pending from a previous session
 await daraja.restorePendingPayment();
 
@@ -119,6 +124,7 @@ final stream = await daraja.stkPush(
   description: 'Payment',  // max 13 characters
   userId: currentUser.id,
 );
+// stream is the same broadcast stream as daraja.stream
 ```
 
 ## Phone number formats
