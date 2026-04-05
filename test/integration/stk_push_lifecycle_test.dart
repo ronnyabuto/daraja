@@ -153,8 +153,9 @@ void main() {
           if (state is PaymentCancelled ||
               state is PaymentSuccess ||
               state is PaymentFailed ||
-              state is PaymentTimeout)
+              state is PaymentTimeout) {
             break;
+          }
         }
 
         expect(states.last, isA<PaymentCancelled>());
@@ -182,8 +183,9 @@ void main() {
           if (state is PaymentFailed ||
               state is PaymentSuccess ||
               state is PaymentCancelled ||
-              state is PaymentTimeout)
+              state is PaymentTimeout) {
             break;
+          }
         }
 
         expect(states.last, isA<PaymentFailed>());
@@ -213,8 +215,9 @@ void main() {
           if (state is PaymentTimeout ||
               state is PaymentSuccess ||
               state is PaymentFailed ||
-              state is PaymentCancelled)
+              state is PaymentCancelled) {
             break;
+          }
         }
 
         expect(
@@ -285,7 +288,9 @@ void main() {
         addTearDown(daraja2.dispose);
 
         final recovered = <PaymentState>[];
-        daraja2.stream.listen(recovered.add);
+        daraja2.stream.listen(
+          recovered.add,
+        ); // uses Daraja.stream public getter
 
         await daraja2.restorePendingPayment();
         await Future<void>.delayed(const Duration(seconds: 5));
@@ -296,9 +301,4 @@ void main() {
       timeout: const Timeout(Duration(seconds: 60)),
     );
   }, skip: skipReason);
-}
-
-extension on Daraja {
-  Stream<PaymentState> get stream =>
-      (this as dynamic)._notifier.stream as Stream<PaymentState>;
 }

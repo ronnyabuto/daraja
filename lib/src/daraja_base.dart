@@ -24,6 +24,15 @@ final class Daraja {
 
   DarajaConfig get config => _config;
 
+  /// The payment state stream. Emits every [PaymentState] transition,
+  /// including those triggered by [restorePendingPayment].
+  ///
+  /// Subscribe to this before calling [restorePendingPayment] or [stkPush]
+  /// if you need a global listener (e.g. a top-level payment status widget).
+  /// The stream returned by [stkPush] is the same broadcast stream — you do
+  /// not need both.
+  Stream<PaymentState> get stream => _notifier.stream;
+
   /// Call once during app initialisation to restore any payment that was
   /// pending when the app was previously killed.
   Future<void> restorePendingPayment() => _notifier.restorePendingPayment();
