@@ -40,3 +40,20 @@ final class StkPushRejectedError extends DarajaException {
   @override
   String toString() => 'StkPushRejectedError[$responseCode]: $message';
 }
+
+/// Thrown when the B2C request is accepted at the HTTP level (200) but
+/// Safaricom's [ResponseCode] is non-zero — meaning the request was rejected
+/// before entering the processing queue.
+///
+/// Common [responseCode] values:
+/// - `'2001'` — wrong credentials; check [SecurityCredential] generation
+/// - `'1001'` — unable to lock subscriber
+final class B2cRejectedError extends DarajaException {
+  const B2cRejectedError(super.message, {required this.responseCode});
+
+  /// The Safaricom [ResponseCode] string from the B2C initiation response.
+  final String responseCode;
+
+  @override
+  String toString() => 'B2cRejectedError[$responseCode]: $message';
+}

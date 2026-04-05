@@ -80,11 +80,12 @@ appwrite functions createDeployment \
   --code=.
 ```
 
-In the Appwrite console, set Execute access to **Any** — Safaricom doesn't send auth headers. Add two environment variables:
+In the Appwrite console, set Execute access to **Any** — Safaricom doesn't send auth headers. Add these environment variables:
 
 ```
-DARAJA_DATABASE_ID = <your-database-id>
-DARAJA_COLLECTION_ID = <your-collection-id>
+DARAJA_DATABASE_ID    = <your-database-id>
+DARAJA_COLLECTION_ID  = <your-stk-collection-id>
+DARAJA_B2C_COLLECTION_ID = <your-b2c-collection-id>   # only needed for B2C
 ```
 
 Copy the generated function domain.
@@ -214,6 +215,109 @@ case PaymentFailed(:final message, :final isInsufficientFunds,
 ## PaymentTimeout
 
 `PaymentTimeout` is not `PaymentFailed`. It means the 90-second wait elapsed with no callback. Money may have been deducted. The receipt may exist on Safaricom's ledger. Do not tell the customer their payment failed — show neutral status and a support path.
+
+## B2C disbursements
+
+Send funds from your M-Pesa shortcode to a customer's phone.
+
+### Appwrite B2C collection schema
+
+Create a second collection (referenced by `b2cCollectionId` in your config):
+
+| Attribute | Type | Required |
+|---|---|---|
+| `originatorConversationId` | String (36) | Yes |
+| `conversationId` | String (50) | No |
+| `status` | String (20) | Yes |
+| `resultCode` | Integer | No |
+| `receipt` | String (20) | No |
+| `amount` | Integer | No |
+| `receiverName` | String (255) | No |
+| `failureReason` | String (255) | No |
+| `mpesaTimestamp` | String (50) | No |
+| `settledAt` | String (50) | Yes |
+
+### SecurityCredential
+
+B2C requires your `InitiatorPassword` encrypted with Safaricom's RSA public key. Extract the public key from the certificate Safaricom provides on the developer portal:
+
+```bash
+# Sandbox
+openssl x509 -in SandboxCertificate.cer -inform DER -pubkey -noout > sandbox_pubkey.pem
+
+# Production
+openssl x509 -in ProductionCertificate.cer -inform DER -pubkey -noout > prod_pubkey.pem
+```
+
+Then generate the credential at runtime:
+
+```dart
+import 'package:daraja/daraja.dart';
+
+const sandboxCert = '''
+-----BEGIN PUBLIC KEY-----
+<paste PEM content here>
+-----END PUBLIC KEY-----''';
+
+final credential = SecurityCredential.generate(
+  initiatorPassword: 'YourInitiatorPassword',
+  certificate: sandboxCert,
+);
+```
+
+`SecurityCredential.generate()` uses RSA PKCS#1 v1.5 encryption as required by Safaricom. Do not hardcode `initiatorPassword` in client-side code — generate the credential on your backend and pass it to `b2cPush()`.
+
+### Usage
+
+```dart
+final daraja = Daraja(
+  config: DarajaConfig(
+    // ... existing STK Push fields ...
+    b2cCollectionId: 'disbursements',  // new
+  ),
+);
+
+try {
+  final stream = await daraja.b2cPush(
+    phone: '0712345678',
+    amount: 500,
+    initiatorName: 'YourInitiatorName',
+    securityCredential: credential,  // from SecurityCredential.generate()
+    remarks: 'March commission',
+    commandId: B2cCommandId.businessPayment,  // default
+    userId: currentUser.id,
+  );
+
+  stream.listen((state) {
+    switch (state) {
+      case DisbursementSuccess(:final receiptNumber, :final amount, :final receiverName):
+        showSuccess('Sent KES $amount to $receiverName — $receiptNumber');
+      case DisbursementFailed(:final message):
+        showError('Disbursement failed: $message');
+      case DisbursementTimeout(:final originatorConversationId):
+        showNeutral('Check dashboard — funds may have been sent ($originatorConversationId)');
+      case DisbursementPending():
+        showSpinner();
+      case DisbursementInitiating():
+        showSpinner();
+    }
+  });
+} on DarajaAuthError catch (e) {
+  showError('Configuration error: ${e.message}');
+} on B2cRejectedError catch (e) {
+  if (e.responseCode == '2001') {
+    showError('Wrong initiator credentials. Check SecurityCredential.');
+  } else {
+    showError('B2C rejected: ${e.message}');
+  }
+} on DarajaException catch (e) {
+  showError(e.message);
+}
+```
+
+### DisbursementTimeout
+
+Like `PaymentTimeout` for STK Push — a timeout means the request expired in Safaricom's queue, not that the funds were definitely not sent. Always check the Safaricom dashboard and verify against `originatorConversationId` before marking a disbursement as failed.
 
 ## Free tier note
 

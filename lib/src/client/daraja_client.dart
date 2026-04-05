@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 
+import '../models/b2c_command_id.dart';
 import '../models/daraja_config.dart';
 import '../models/daraja_exception.dart';
 import '../models/payment_result.dart';
@@ -193,6 +194,66 @@ class DarajaClient {
         description,
         'description',
         'exceeds 13 character limit',
+      );
+    }
+  }
+
+  /// Sends a B2C payment request to Safaricom.
+  ///
+  /// Throws [DarajaAuthError] for OAuth failures, [B2cRejectedError] if
+  /// Safaricom returns a non-zero [ResponseCode], or [DarajaException] for
+  /// other HTTP errors.
+  Future<void> initiateB2c({
+    required String originatorConversationId,
+    required String phone,
+    required int amount,
+    required String initiatorName,
+    required String securityCredential,
+    required B2cCommandId commandId,
+    required String remarks,
+    String? occasion,
+    required String userId,
+  }) async {
+    if (amount <= 0) {
+      throw ArgumentError.value(amount, 'amount', 'must be a positive integer');
+    }
+    final normalised = _normalisePhone(phone);
+    final token = await _getToken();
+
+    final response = await _http.post(
+      Uri.parse('${_config.baseUrl}/mpesa/b2c/v3/paymentrequest'),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode({
+        'OriginatorConversationID': originatorConversationId,
+        'InitiatorName': initiatorName,
+        'SecurityCredential': securityCredential,
+        'CommandID': commandId.toApiString(),
+        'Amount': amount,
+        'PartyA': _config.shortcode,
+        'PartyB': normalised,
+        'Remarks': remarks,
+        if (occasion != null) 'Occasion': occasion,
+        'ResultURL': '${_config.callbackDomain}/b2c/result?uid=$userId',
+        'QueueTimeOutURL': '${_config.callbackDomain}/b2c/timeout?uid=$userId',
+      }),
+    );
+
+    final body = jsonDecode(response.body) as Map<String, dynamic>;
+
+    if (response.statusCode != 200) {
+      throw DarajaException(
+        body['errorMessage'] as String? ?? 'B2C initiation failed',
+        statusCode: response.statusCode,
+      );
+    }
+
+    if (body['ResponseCode'] != '0') {
+      throw B2cRejectedError(
+        body['ResponseDescription'] as String? ?? 'B2C rejected',
+        responseCode: body['ResponseCode'] as String,
       );
     }
   }
