@@ -7,10 +7,21 @@
 ///   pesa-playground --port 3000
 ///
 /// Run with:
-///   flutter test test/integration/ --tags integration
+///   flutter test test/integration/ --tags integration \
+///     --dart-define=APPWRITE_ENDPOINT=https://cloud.appwrite.io/v1 \
+///     --dart-define=APPWRITE_PROJECT_ID=YOUR_PROJECT_ID \
+///     --dart-define=APPWRITE_DATABASE_ID=YOUR_DATABASE_ID \
+///     --dart-define=APPWRITE_COLLECTION_ID=YOUR_COLLECTION_ID \
+///     --dart-define=DARAJA_CONSUMER_KEY=YOUR_CONSUMER_KEY \
+///     --dart-define=DARAJA_CONSUMER_SECRET=YOUR_CONSUMER_SECRET \
+///     --dart-define=DARAJA_PASSKEY=YOUR_PASSKEY \
+///     --dart-define=CALLBACK_DOMAIN=YOUR_CALLBACK_DOMAIN \
+///     --dart-define=TEST_PHONE=0712345678 \
+///     --dart-define=APPWRITE_USER_ID=YOUR_USER_ID
 ///
 /// They are excluded from the standard test run because they require
-/// external processes and a live Appwrite project.
+/// external processes and a live Appwrite project. The CI unit-test job uses
+/// `flutter test --exclude-tags integration` to skip these automatically.
 @Tags(['integration'])
 library;
 
@@ -47,20 +58,40 @@ const _testUserId = String.fromEnvironment('APPWRITE_USER_ID');
 // ---------------------------------------------------------------------------
 
 void main() {
-  late Daraja daraja;
+  // Required: Appwrite's ClientIO calls path_provider in its constructor via
+  // an unawaited init(), which touches a platform channel (MethodChannel).
+  // Platform channels require ServicesBinding. TestWidgetsFlutterBinding
+  // provides it for flutter test on desktop without a real device.
+  // See: https://api.flutter.dev/flutter/flutter_test/TestWidgetsFlutterBinding/ensureInitialized.html
+  TestWidgetsFlutterBinding.ensureInitialized();
+
+  // Evaluated at registration time, before the test runner starts any test.
+  // When credentials are absent, the entire group is skipped — setUp, test
+  // bodies, and tearDown are never called. markTestSkipped() inside setUp()
+  // is not used here because TestWidgetsFlutterBinding changes how
+  // SkipException propagates, and the recovery test creates Daraja instances
+  // directly in its body (bypassing setUp entirely).
+  const endpoint = String.fromEnvironment('APPWRITE_ENDPOINT');
+  final skipReason = endpoint.isEmpty
+      ? 'Integration tests require live credentials via --dart-define.\n'
+            'Run: flutter test test/integration/ --tags integration '
+            '--dart-define=APPWRITE_ENDPOINT=... (see file header for all flags)'
+      : null;
+
+  Daraja? daraja;
 
   setUp(() {
     SharedPreferences.setMockInitialValues({});
     daraja = Daraja(config: _integrationConfig);
   });
 
-  tearDown(() => daraja.dispose());
+  tearDown(() => daraja?.dispose());
 
   group('Full STK Push lifecycle', () {
     test(
       'happy path — PaymentSuccess received after PIN entry',
       () async {
-        final stream = await daraja.stkPush(
+        final stream = await daraja!.stkPush(
           phone: _testPhone,
           amount: 1,
           reference: 'INT-TEST-001',
@@ -108,7 +139,7 @@ void main() {
         // Pesa Playground: configure the next request to simulate cancellation
         // by setting ResultCode 1032 before initiating.
 
-        final stream = await daraja.stkPush(
+        final stream = await daraja!.stkPush(
           phone: _testPhone,
           amount: 1,
           reference: 'INT-TEST-002',
@@ -137,7 +168,7 @@ void main() {
       () async {
         // Pesa Playground: configure the next request to return ResultCode 1031.
 
-        final stream = await daraja.stkPush(
+        final stream = await daraja!.stkPush(
           phone: _testPhone,
           amount: 1,
           reference: 'INT-TEST-003',
@@ -168,7 +199,7 @@ void main() {
       () async {
         // Pesa Playground: configure the next request to never send a callback.
 
-        final stream = await daraja.stkPush(
+        final stream = await daraja!.stkPush(
           phone: _testPhone,
           amount: 1,
           reference: 'INT-TEST-004',
@@ -202,7 +233,7 @@ void main() {
       () async {
         // Pesa Playground: configure to send the SUCCESS callback twice.
 
-        final stream = await daraja.stkPush(
+        final stream = await daraja!.stkPush(
           phone: _testPhone,
           amount: 1,
           reference: 'INT-TEST-005',
@@ -264,7 +295,7 @@ void main() {
       },
       timeout: const Timeout(Duration(seconds: 60)),
     );
-  });
+  }, skip: skipReason);
 }
 
 extension on Daraja {

@@ -26,12 +26,35 @@ final class PaymentSuccess extends PaymentState {
     required this.receiptNumber,
     required this.amount,
     required this.settledAt,
+    this.mpesaTimestamp,
   });
 
   final String checkoutRequestId;
+
+  /// The M-Pesa receipt number (e.g. `NLJ7RT61SV`).
+  ///
+  /// This is the primary reconciliation anchor. Use it to match payments
+  /// in your database and in M-Pesa transaction history.
+  ///
+  /// As of March 2026, Safaricom masks the `PhoneNumber` field in callbacks
+  /// (`0722000***`). The daraja package never captures phone numbers —
+  /// user identity is tied to the `userId` passed in [DarajaConfig] and
+  /// forwarded in the callback URL. Do not use phone numbers as database keys
+  /// in M-Pesa integrations.
   final String receiptNumber;
+
   final int amount;
+
+  /// When the Appwrite Function processed the callback (UTC).
   final DateTime settledAt;
+
+  /// The Safaricom-stamped transaction time (UTC), parsed from the
+  /// `TransactionDate` field in `CallbackMetadata`. Null if Safaricom
+  /// omitted the field (rare, but possible on partial callbacks).
+  ///
+  /// Prefer this over [settledAt] for reconciliation timestamps — it reflects
+  /// when Safaricom completed the transaction, not when the callback arrived.
+  final DateTime? mpesaTimestamp;
 }
 
 final class PaymentFailed extends PaymentState {

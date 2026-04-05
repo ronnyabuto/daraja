@@ -1,0 +1,11 @@
+# dart_test.yaml — test runner configuration
+# https://github.com/dart-lang/test/blob/master/pkgs/test/doc/configuration.md
+
+tags:
+  # Registers the tag so the runner does not warn about unrecognised tags.
+  # Tests tagged [integration] are NOT skipped by default — they are excluded
+  # at the CLI level:
+  #   flutter test --exclude-tags integration   (unit-test CI job)
+  #   flutter test --tags integration ...        (integration CI job, with secrets)
+  integration:
+    timeout: 2x   # integration tests hit live services; give them extra headroom

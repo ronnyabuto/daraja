@@ -34,6 +34,7 @@ Future<dynamic> main(final context) async {
 
   String? receipt;
   int? amount;
+  String? mpesaTimestamp;
   if (isSuccess) {
     final items = (stkCallback['CallbackMetadata']?['Item'] as List?)
         ?.cast<Map<String, dynamic>>();
@@ -50,6 +51,18 @@ Future<dynamic> main(final context) async {
                 )['Value']
                 as num?)
             ?.toInt();
+
+    // TransactionDate is returned as an integer in YYYYMMDDHHmmss format (EAT).
+    // PhoneNumber is intentionally not extracted — Safaricom now masks it
+    // (e.g. "0722000***") as of March 2026. Use userId from the query param
+    // for user lookup instead.
+    final txDateRaw = items?.firstWhere(
+      (i) => i['Name'] == 'TransactionDate',
+      orElse: () => {'Value': null},
+    )['Value'];
+    if (txDateRaw != null) {
+      mpesaTimestamp = _parseTransactionDate(txDateRaw.toString());
+    }
   }
 
   final client = Client()
@@ -75,6 +88,7 @@ Future<dynamic> main(final context) async {
         'receipt': receipt,
         'amount': amount,
         'failureReason': isSuccess ? null : resultDesc,
+        'mpesaTimestamp': mpesaTimestamp,
         'settledAt': DateTime.now().toUtc().toIso8601String(),
       },
       permissions: permissions,
@@ -100,3 +114,28 @@ String _mapStatus(int code) => switch (code) {
   1037 => 'TIMEOUT',
   _ => 'FAILED',
 };
+
+/// Parse a Safaricom TransactionDate integer (YYYYMMDDHHmmss, EAT) to ISO 8601.
+/// Returns null if the value is malformed.
+String? _parseTransactionDate(String raw) {
+  if (raw.length != 14) return null;
+  try {
+    final year = int.parse(raw.substring(0, 4));
+    final month = int.parse(raw.substring(4, 6));
+    final day = int.parse(raw.substring(6, 8));
+    final hour = int.parse(raw.substring(8, 10));
+    final minute = int.parse(raw.substring(10, 12));
+    final second = int.parse(raw.substring(12, 14));
+    // EAT is UTC+3. Store as UTC.
+    return DateTime.utc(
+      year,
+      month,
+      day,
+      hour,
+      minute,
+      second,
+    ).subtract(const Duration(hours: 3)).toIso8601String();
+  } catch (_) {
+    return null;
+  }
+}
