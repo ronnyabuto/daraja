@@ -8,8 +8,7 @@
 
 ## Checklist
 
-- [ ] Code follows the project style (no fluff, no commented-out code, no unnecessary comments)
+- [ ] Code follows the project style
 - [ ] All new public API is exported correctly from `lib/daraja.dart`
 - [ ] Tests added or updated
 - [ ] `flutter analyze` passes clean
-- [ ] No excluded files staged (`.claude/`, `CLAUDE.md`, research docs)
