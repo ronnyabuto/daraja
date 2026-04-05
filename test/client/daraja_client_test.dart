@@ -751,28 +751,30 @@ void main() {
       expect(body['Remarks'], 'Test payout');
     });
 
-    test('constructs ResultURL and QueueTimeOutURL with domain and userId',
-        () async {
-      when(
-        () => mockHttp.post(
-          any(),
-          headers: any(named: 'headers'),
-          body: any(named: 'body'),
-        ),
-      ).thenAnswer((_) async => b2cSuccess());
+    test(
+      'constructs ResultURL and QueueTimeOutURL with domain and userId',
+      () async {
+        when(
+          () => mockHttp.post(
+            any(),
+            headers: any(named: 'headers'),
+            body: any(named: 'body'),
+          ),
+        ).thenAnswer((_) async => b2cSuccess());
 
-      await initiateB2c();
+        await initiateB2c();
 
-      final body = captureB2cBody();
-      expect(
-        body['ResultURL'],
-        '${testConfig.callbackDomain}/b2c/result?uid=$testUserId',
-      );
-      expect(
-        body['QueueTimeOutURL'],
-        '${testConfig.callbackDomain}/b2c/timeout?uid=$testUserId',
-      );
-    });
+        final body = captureB2cBody();
+        expect(
+          body['ResultURL'],
+          '${testConfig.callbackDomain}/b2c/result?uid=$testUserId',
+        );
+        expect(
+          body['QueueTimeOutURL'],
+          '${testConfig.callbackDomain}/b2c/timeout?uid=$testUserId',
+        );
+      },
+    );
 
     test('posts to the B2C v3 endpoint', () async {
       when(
@@ -796,27 +798,29 @@ void main() {
       expect(uri.path, '/mpesa/b2c/v3/paymentrequest');
     });
 
-    test('throws B2cRejectedError with responseCode on non-zero ResponseCode',
-        () async {
-      when(
-        () => mockHttp.post(
-          any(),
-          headers: any(named: 'headers'),
-          body: any(named: 'body'),
-        ),
-      ).thenAnswer((_) async => b2cRejected());
-
-      await expectLater(
-        initiateB2c(),
-        throwsA(
-          isA<B2cRejectedError>().having(
-            (e) => e.responseCode,
-            'responseCode',
-            '2001',
+    test(
+      'throws B2cRejectedError with responseCode on non-zero ResponseCode',
+      () async {
+        when(
+          () => mockHttp.post(
+            any(),
+            headers: any(named: 'headers'),
+            body: any(named: 'body'),
           ),
-        ),
-      );
-    });
+        ).thenAnswer((_) async => b2cRejected());
+
+        await expectLater(
+          initiateB2c(),
+          throwsA(
+            isA<B2cRejectedError>().having(
+              (e) => e.responseCode,
+              'responseCode',
+              '2001',
+            ),
+          ),
+        );
+      },
+    );
 
     test('throws DarajaException on non-200 HTTP status', () async {
       when(
@@ -836,10 +840,7 @@ void main() {
     });
 
     test('throws ArgumentError for amount of zero', () {
-      expect(
-        () => initiateB2c(amount: 0),
-        throwsA(isA<ArgumentError>()),
-      );
+      expect(() => initiateB2c(amount: 0), throwsA(isA<ArgumentError>()));
       // Validation runs before any network call.
       verifyNever(
         () => mockHttp.post(
@@ -893,15 +894,9 @@ void main() {
 
   group('B2cCommandId', () {
     test('toApiString returns correct Safaricom API strings', () {
-      expect(
-        B2cCommandId.businessPayment.toApiString(),
-        'BusinessPayment',
-      );
+      expect(B2cCommandId.businessPayment.toApiString(), 'BusinessPayment');
       expect(B2cCommandId.salaryPayment.toApiString(), 'SalaryPayment');
-      expect(
-        B2cCommandId.promotionPayment.toApiString(),
-        'PromotionPayment',
-      );
+      expect(B2cCommandId.promotionPayment.toApiString(), 'PromotionPayment');
     });
   });
 

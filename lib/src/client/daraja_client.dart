@@ -236,10 +236,8 @@ class DarajaClient {
         'PartyB': normalised,
         'Remarks': remarks,
         if (occasion != null) 'Occasion': occasion,
-        'ResultURL':
-            '${_config.callbackDomain}/b2c/result?uid=$userId',
-        'QueueTimeOutURL':
-            '${_config.callbackDomain}/b2c/timeout?uid=$userId',
+        'ResultURL': '${_config.callbackDomain}/b2c/result?uid=$userId',
+        'QueueTimeOutURL': '${_config.callbackDomain}/b2c/timeout?uid=$userId',
       }),
     );
 

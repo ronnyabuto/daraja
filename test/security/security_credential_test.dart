@@ -62,22 +62,24 @@ void main() {
       expect(decrypted, password);
     });
 
-    test('produces different ciphertext each call (PKCS#1 v1.5 randomness)',
-        () {
-      const password = 'Safaricom999!*!';
-      final a = SecurityCredential.generate(
-        initiatorPassword: password,
-        certificate: _testPublicKeyPem,
-      );
-      final b = SecurityCredential.generate(
-        initiatorPassword: password,
-        certificate: _testPublicKeyPem,
-      );
+    test(
+      'produces different ciphertext each call (PKCS#1 v1.5 randomness)',
+      () {
+        const password = 'Safaricom999!*!';
+        final a = SecurityCredential.generate(
+          initiatorPassword: password,
+          certificate: _testPublicKeyPem,
+        );
+        final b = SecurityCredential.generate(
+          initiatorPassword: password,
+          certificate: _testPublicKeyPem,
+        );
 
-      // PKCS#1 v1.5 padding is randomised — two encryptions of the same
-      // plaintext must not produce identical ciphertext.
-      expect(a, isNot(equals(b)));
-    });
+        // PKCS#1 v1.5 padding is randomised — two encryptions of the same
+        // plaintext must not produce identical ciphertext.
+        expect(a, isNot(equals(b)));
+      },
+    );
 
     test('throws ArgumentError for an invalid certificate PEM', () {
       expect(
@@ -89,21 +91,23 @@ void main() {
       );
     });
 
-    test('throws ArgumentError for a certificate that is not an RSA public key',
-        () {
-      // Valid PEM structure but wrong key type header — RSAKeyParser will fail.
-      const notRsaPublicKey = '''
+    test(
+      'throws ArgumentError for a certificate that is not an RSA public key',
+      () {
+        // Valid PEM structure but wrong key type header — RSAKeyParser will fail.
+        const notRsaPublicKey = '''
 -----BEGIN CERTIFICATE-----
 MIICpDCCAYwCCQDU+pQ4pHgSpDANBgkqhkiG9w0BAQsFADAUMRIwEAYDVQQDDAls
 -----END CERTIFICATE-----''';
 
-      expect(
-        () => SecurityCredential.generate(
-          initiatorPassword: 'password',
-          certificate: notRsaPublicKey,
-        ),
-        throwsArgumentError,
-      );
-    });
+        expect(
+          () => SecurityCredential.generate(
+            initiatorPassword: 'password',
+            certificate: notRsaPublicKey,
+          ),
+          throwsArgumentError,
+        );
+      },
+    );
   });
 }

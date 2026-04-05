@@ -30,8 +30,7 @@ Future<dynamic> _handleStkCallback(final context) async {
     }, 400);
   }
 
-  final stkCallback =
-      payload['Body']?['stkCallback'] as Map<String, dynamic>?;
+  final stkCallback = payload['Body']?['stkCallback'] as Map<String, dynamic>?;
   if (stkCallback == null) {
     context.error('Missing Body.stkCallback');
     return context.res.json({
@@ -54,18 +53,16 @@ Future<dynamic> _handleStkCallback(final context) async {
     final items = (stkCallback['CallbackMetadata']?['Item'] as List?)
         ?.cast<Map<String, dynamic>>();
     receipt =
-        items
-            ?.firstWhere(
+        items?.firstWhere(
               (i) => i['Name'] == 'MpesaReceiptNumber',
               orElse: () => {'Value': null},
             )['Value']
             as String?;
     amount =
-        (items
-                    ?.firstWhere(
-                      (i) => i['Name'] == 'Amount',
-                      orElse: () => {'Value': null},
-                    )['Value']
+        (items?.firstWhere(
+                  (i) => i['Name'] == 'Amount',
+                  orElse: () => {'Value': null},
+                )['Value']
                 as num?)
             ?.toInt();
 
@@ -175,42 +172,38 @@ Future<dynamic> _handleB2c(final context, {required bool isTimeout}) async {
     status = 'SUCCESS';
 
     // Parse ResultParameters.ResultParameter array.
-    final params =
-        (result['ResultParameters']?['ResultParameter'] as List?)
-            ?.cast<Map<String, dynamic>>();
+    final params = (result['ResultParameters']?['ResultParameter'] as List?)
+        ?.cast<Map<String, dynamic>>();
 
     receipt =
-        params
-            ?.firstWhere(
+        params?.firstWhere(
               (p) => p['Key'] == 'TransactionReceipt',
               orElse: () => {'Value': null},
             )['Value']
             as String?;
 
     amount =
-        (params
-                    ?.firstWhere(
-                      (p) => p['Key'] == 'TransactionAmount',
-                      orElse: () => {'Value': null},
-                    )['Value']
+        (params?.firstWhere(
+                  (p) => p['Key'] == 'TransactionAmount',
+                  orElse: () => {'Value': null},
+                )['Value']
                 as num?)
             ?.toInt();
 
     receiverName =
-        params
-            ?.firstWhere(
+        params?.firstWhere(
               (p) => p['Key'] == 'ReceiverPartyPublicName',
               orElse: () => {'Value': null},
             )['Value']
             as String?;
 
     // B2C timestamp format: "DD.MM.YYYY HH:mm:ss" (EAT).
-    final rawTs = params
-        ?.firstWhere(
-          (p) => p['Key'] == 'TransactionCompletedDateTime',
-          orElse: () => {'Value': null},
-        )['Value']
-        as String?;
+    final rawTs =
+        params?.firstWhere(
+              (p) => p['Key'] == 'TransactionCompletedDateTime',
+              orElse: () => {'Value': null},
+            )['Value']
+            as String?;
     if (rawTs != null) {
       mpesaTimestamp = _parseB2cTimestamp(rawTs);
     }
@@ -251,9 +244,7 @@ Future<dynamic> _handleB2c(final context, {required bool isTimeout}) async {
         'Duplicate B2C callback for $originatorConversationId — ignored',
       );
     } else {
-      context.error(
-        'DB write failed for B2C $originatorConversationId: $e',
-      );
+      context.error('DB write failed for B2C $originatorConversationId: $e');
     }
   } catch (e) {
     context.error('Unexpected B2C error for $originatorConversationId: $e');
@@ -288,9 +279,14 @@ String? _parseEatTimestamp(String raw) {
     final hour = int.parse(raw.substring(8, 10));
     final minute = int.parse(raw.substring(10, 12));
     final second = int.parse(raw.substring(12, 14));
-    return DateTime.utc(year, month, day, hour, minute, second)
-        .subtract(const Duration(hours: 3))
-        .toIso8601String();
+    return DateTime.utc(
+      year,
+      month,
+      day,
+      hour,
+      minute,
+      second,
+    ).subtract(const Duration(hours: 3)).toIso8601String();
   } catch (_) {
     return null;
   }
@@ -315,9 +311,14 @@ String? _parseB2cTimestamp(String raw) {
     final minute = int.parse(timeParts[1]);
     final second = int.parse(timeParts[2]);
 
-    return DateTime.utc(year, month, day, hour, minute, second)
-        .subtract(const Duration(hours: 3))
-        .toIso8601String();
+    return DateTime.utc(
+      year,
+      month,
+      day,
+      hour,
+      minute,
+      second,
+    ).subtract(const Duration(hours: 3)).toIso8601String();
   } catch (_) {
     return null;
   }
