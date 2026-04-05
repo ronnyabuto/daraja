@@ -21,6 +21,7 @@ const testConfig = DarajaConfig(
 const testCid = 'ws_CO_191220191020363925';
 const testUserId = 'user_abc123';
 const testReceipt = 'NLJ7RT61SV';
+final testMpesaTimestamp = DateTime.utc(2026, 4, 5, 11, 21, 15);
 
 http.Response oauthSuccess() => http.Response(
   jsonEncode({'access_token': 'test_access_token', 'expires_in': '3599'}),
@@ -94,8 +95,10 @@ appwrite_models.Document successDocument({
   String receipt = testReceipt,
   int amount = 1000,
   DateTime? settledAt,
+  DateTime? mpesaTimestamp,
 }) {
   final settled = settledAt ?? DateTime.utc(2026, 3, 31, 12, 0, 0);
+  final mpesaTs = mpesaTimestamp ?? testMpesaTimestamp;
   return appwrite_models.Document(
     $id: cid,
     $sequence: '1',
@@ -111,6 +114,7 @@ appwrite_models.Document successDocument({
       'receipt': receipt,
       'amount': amount,
       'failureReason': null,
+      'mpesaTimestamp': mpesaTs.toIso8601String(),
       'settledAt': settled.toIso8601String(),
     },
   );
@@ -194,8 +198,10 @@ RealtimeMessage realtimeMessage({
   int resultCode = 0,
   String? failureReason,
   String eventType = 'create',
+  DateTime? mpesaTimestamp,
 }) {
   final now = DateTime.utc(2026, 3, 31, 12, 0, 0);
+  final mpesaTs = mpesaTimestamp ?? testMpesaTimestamp;
   return RealtimeMessage(
     events: [
       'databases.payments.collections.transactions.documents.$cid.$eventType',
@@ -208,6 +214,7 @@ RealtimeMessage realtimeMessage({
       'receipt': status == 'SUCCESS' ? receipt : null,
       'amount': status == 'SUCCESS' ? amount : null,
       'failureReason': failureReason,
+      'mpesaTimestamp': status == 'SUCCESS' ? mpesaTs.toIso8601String() : null,
       'settledAt': now.toIso8601String(),
     },
     channels: ['databases.payments.collections.transactions.documents.$cid'],
