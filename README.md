@@ -152,6 +152,59 @@ case PaymentSuccess(:final receiptNumber, :final mpesaTimestamp, :final settledA
   saveToLedger(receipt: receiptNumber, completedAt: txTime);
 ```
 
+## Error handling
+
+Errors thrown before the payment stream starts (initiation failures) are typed:
+
+```dart
+try {
+  final stream = await daraja.stkPush(
+    phone: '0712345678',
+    amount: 1000,
+    reference: 'ORDER-001',
+    description: 'Payment',
+    userId: currentUser.id,
+  );
+  // ...
+} on DarajaAuthError catch (e) {
+  // consumerKey/consumerSecret wrong, or app not enabled for this API
+  showError('Configuration error: ${e.message}');
+} on StkPushRejectedError catch (e) {
+  // Safaricom accepted the HTTP call but rejected the push before it reached
+  // the customer's phone. ResponseCode is non-zero.
+  if (e.responseCode == '1025') {
+    showError('Another payment is already in progress. Please wait.');
+  } else {
+    showError('Payment could not be initiated: ${e.message}');
+  }
+} on DarajaException catch (e) {
+  // Generic fallback — HTTP errors, network issues
+  showError(e.message);
+}
+```
+
+For `PaymentFailed` states inside the stream, convenience getters map the Safaricom result codes you'll actually see:
+
+```dart
+case PaymentFailed(:final message, :final isInsufficientFunds,
+    :final isWrongPin, :final isSubscriberLocked):
+  if (isInsufficientFunds) {
+    showError('Insufficient M-Pesa balance.');
+  } else if (isWrongPin) {
+    showError('Wrong PIN entered. Please try again.');
+  } else if (isSubscriberLocked) {
+    showError('Account temporarily locked. Try again in a moment.');
+  } else {
+    showError(message);
+  }
+```
+
+| Getter | Safaricom resultCode | Meaning |
+|---|---|---|
+| `isInsufficientFunds` | 1 | Customer balance too low |
+| `isWrongPin` | 2001 | Wrong M-Pesa PIN entered |
+| `isSubscriberLocked` | 1001 | Too many wrong PINs or transaction in progress |
+
 ## PaymentTimeout
 
 `PaymentTimeout` is not `PaymentFailed`. It means the 90-second wait elapsed with no callback. Money may have been deducted. The receipt may exist on Safaricom's ledger. Do not tell the customer their payment failed — show neutral status and a support path.

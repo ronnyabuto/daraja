@@ -67,6 +67,21 @@ final class PaymentFailed extends PaymentState {
   final String checkoutRequestId;
   final int resultCode;
   final String message;
+
+  /// Whether the payment failed because the customer had insufficient funds
+  /// (Safaricom resultCode 1).
+  bool get isInsufficientFunds => resultCode == 1;
+
+  /// Whether the payment failed because the customer entered the wrong PIN
+  /// (Safaricom resultCode 2001).
+  bool get isWrongPin => resultCode == 2001;
+
+  /// Whether the subscriber is locked — either too many wrong PIN attempts
+  /// or another transaction is already in progress (Safaricom resultCode 1001).
+  ///
+  /// This is a transient state. Prompt the customer to try again after a
+  /// short delay rather than treating it as a hard failure.
+  bool get isSubscriberLocked => resultCode == 1001;
 }
 
 final class PaymentCancelled extends PaymentState {

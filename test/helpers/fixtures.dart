@@ -47,6 +47,14 @@ http.Response stkPushRejected() => http.Response(
   200,
 );
 
+http.Response stkPushTransactionInProgress() => http.Response(
+  jsonEncode({
+    'ResponseCode': '1025',
+    'ResponseDescription': 'Transaction already in progress, please try again.',
+  }),
+  200,
+);
+
 http.Response apiError(
   int statusCode, [
   String message = 'Internal Server Error',
