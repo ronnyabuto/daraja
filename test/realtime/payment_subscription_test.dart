@@ -54,6 +54,45 @@ void main() {
         expect(s.receiptNumber, testReceipt);
         expect(s.amount, 1000);
         expect(s.settledAt, settledAt);
+        expect(s.mpesaTimestamp, testMpesaTimestamp);
+      },
+    );
+
+    test(
+      'returns PaymentSuccess with null mpesaTimestamp when field is absent',
+      () async {
+        final now = DateTime.utc(2026, 3, 31, 12, 0, 0);
+        when(
+          () => mockDatabases.getDocument(
+            databaseId: any(named: 'databaseId'),
+            collectionId: any(named: 'collectionId'),
+            documentId: any(named: 'documentId'),
+          ),
+        ).thenAnswer(
+          (_) async => appwrite_models.Document(
+            $id: testCid,
+            $sequence: '1',
+            $collectionId: 'transactions',
+            $databaseId: 'payments',
+            $createdAt: now.toIso8601String(),
+            $updatedAt: now.toIso8601String(),
+            $permissions: [],
+            data: {
+              'checkoutRequestId': testCid,
+              'status': 'SUCCESS',
+              'resultCode': 0,
+              'receipt': testReceipt,
+              'amount': 500,
+              'failureReason': null,
+              'mpesaTimestamp': null,
+              'settledAt': now.toIso8601String(),
+            },
+          ),
+        );
+
+        final state = await subscription.poll();
+        expect(state, isA<PaymentSuccess>());
+        expect((state as PaymentSuccess).mpesaTimestamp, isNull);
       },
     );
 

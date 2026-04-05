@@ -25,7 +25,12 @@ In the Appwrite Console, create a database (e.g. `payments`) and a collection (e
 | `receipt` | String | 20 | No |
 | `amount` | Integer | — | No |
 | `failureReason` | String | 255 | No |
+| `mpesaTimestamp` | String | 50 | No |
 | `settledAt` | String | 50 | Yes |
+
+**`mpesaTimestamp`** — the Safaricom-stamped transaction time, extracted from `TransactionDate` in `CallbackMetadata` and stored as UTC ISO 8601. Present only on successful payments. Use this for reconciliation timestamps — it reflects when Safaricom completed the transaction, not when the callback arrived.
+
+**Phone number is never stored.** As of March 2026, Safaricom masks `PhoneNumber` in all callbacks (`0722000***`). The function intentionally does not read or persist it. User identity is tied to the `userId` passed in the callback URL (`?uid=<id>`), and `receipt` (`MpesaReceiptNumber`) is the primary transaction anchor.
 
 Collection permissions: leave empty — the function sets per-document permissions on write.
 

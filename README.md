@@ -132,6 +132,26 @@ All standard Kenyan formats are accepted and normalised to `2547XXXXXXXX` / `254
 
 Anything else throws a `FormatException` before the API call.
 
+## Reconciliation and phone masking
+
+As of March 2026, Safaricom masks the `PhoneNumber` field in all STK Push callbacks — it returns `0722000***` instead of the real number. Any integration that uses phone number as a database key or for user lookup will silently break.
+
+daraja never captures phone number. User identity is tied to the `userId` you pass into `stkPush()`, which is forwarded to the Appwrite Function via the callback URL. Transaction identity is anchored on two fields from `PaymentSuccess`:
+
+| Field | Source | Use |
+|---|---|---|
+| `receiptNumber` | `MpesaReceiptNumber` in callback | Primary transaction anchor — matches M-Pesa transaction history |
+| `mpesaTimestamp` | `TransactionDate` in callback (UTC) | Safaricom-stamped time the transaction completed |
+| `settledAt` | Set by the Appwrite Function | When the callback arrived and was written to the database |
+
+`mpesaTimestamp` is nullable — Safaricom occasionally omits `TransactionDate` on partial callbacks. Always have a fallback to `settledAt`.
+
+```dart
+case PaymentSuccess(:final receiptNumber, :final mpesaTimestamp, :final settledAt):
+  final txTime = mpesaTimestamp ?? settledAt;
+  saveToLedger(receipt: receiptNumber, completedAt: txTime);
+```
+
 ## PaymentTimeout
 
 `PaymentTimeout` is not `PaymentFailed`. It means the 90-second wait elapsed with no callback. Money may have been deducted. The receipt may exist on Safaricom's ledger. Do not tell the customer their payment failed — show neutral status and a support path.

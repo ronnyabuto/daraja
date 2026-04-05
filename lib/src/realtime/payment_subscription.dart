@@ -78,6 +78,9 @@ PaymentState? _parseDocument(
       receiptNumber: data['receipt'] as String,
       amount: data['amount'] as int,
       settledAt: DateTime.parse(data['settledAt'] as String),
+      mpesaTimestamp: data['mpesaTimestamp'] != null
+          ? DateTime.parse(data['mpesaTimestamp'] as String)
+          : null,
     ),
     'FAILED' => PaymentFailed(
       checkoutRequestId: checkoutRequestId,
