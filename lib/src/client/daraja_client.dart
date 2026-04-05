@@ -62,8 +62,9 @@ class DarajaClient {
     }
 
     if (body['ResponseCode'] != '0') {
-      throw DarajaException(
+      throw StkPushRejectedError(
         body['ResponseDescription'] as String? ?? 'STK Push rejected',
+        responseCode: body['ResponseCode'] as String,
       );
     }
 
@@ -119,6 +120,12 @@ class DarajaClient {
       headers: {'Authorization': 'Basic $credentials'},
     );
 
+    if (response.statusCode == 401 || response.statusCode == 403) {
+      throw DarajaAuthError(
+        'OAuth failed: check consumerKey and consumerSecret',
+        statusCode: response.statusCode,
+      );
+    }
     if (response.statusCode != 200) {
       throw DarajaException('OAuth failed', statusCode: response.statusCode);
     }
