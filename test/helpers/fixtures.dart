@@ -198,6 +198,160 @@ appwrite_models.Document timeoutDocument({String cid = testCid}) {
   );
 }
 
+// ---------------------------------------------------------------------------
+// B2C fixtures
+// ---------------------------------------------------------------------------
+
+const testOriginatorConversationId = 'a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d';
+const testB2cCollectionId = 'disbursements';
+const testB2cReceipt = 'OPH7RT61AB';
+const testReceiverName = '0722000000 - Jane Doe';
+
+http.Response b2cSuccess([
+  String originatorId = testOriginatorConversationId,
+]) => http.Response(
+  jsonEncode({
+    'ConversationID': 'AG_20240322_00007cdf9d70a7c6ab98',
+    'OriginatorConversationID': originatorId,
+    'ResponseCode': '0',
+    'ResponseDescription': 'Accept the service request successfully.',
+  }),
+  200,
+);
+
+http.Response b2cRejected() => http.Response(
+  jsonEncode({
+    'ResponseCode': '2001',
+    'ResponseDescription': 'Wrong credentials.',
+  }),
+  200,
+);
+
+appwrite_models.Document b2cSuccessDocument({
+  String originatorId = testOriginatorConversationId,
+  String receipt = testB2cReceipt,
+  int amount = 500,
+  DateTime? settledAt,
+  DateTime? mpesaTimestamp,
+}) {
+  final settled = settledAt ?? DateTime.utc(2026, 4, 5, 10, 0, 0);
+  final mpesaTs = mpesaTimestamp ?? DateTime.utc(2026, 4, 5, 9, 57, 0);
+  return appwrite_models.Document(
+    $id: originatorId,
+    $sequence: '1',
+    $collectionId: testB2cCollectionId,
+    $databaseId: 'payments',
+    $createdAt: settled.toIso8601String(),
+    $updatedAt: settled.toIso8601String(),
+    $permissions: ['read("user:$testUserId")'],
+    data: {
+      'originatorConversationId': originatorId,
+      'conversationId': 'AG_20240322_00007cdf9d70a7c6ab98',
+      'status': 'SUCCESS',
+      'resultCode': 0,
+      'receipt': receipt,
+      'amount': amount,
+      'receiverName': testReceiverName,
+      'failureReason': null,
+      'mpesaTimestamp': mpesaTs.toIso8601String(),
+      'settledAt': settled.toIso8601String(),
+    },
+  );
+}
+
+appwrite_models.Document b2cFailedDocument({
+  String originatorId = testOriginatorConversationId,
+  int resultCode = 2001,
+  String failureReason = 'Wrong credentials.',
+}) {
+  final now = DateTime.utc(2026, 4, 5, 10, 0, 0);
+  return appwrite_models.Document(
+    $id: originatorId,
+    $sequence: '1',
+    $collectionId: testB2cCollectionId,
+    $databaseId: 'payments',
+    $createdAt: now.toIso8601String(),
+    $updatedAt: now.toIso8601String(),
+    $permissions: ['read("user:$testUserId")'],
+    data: {
+      'originatorConversationId': originatorId,
+      'conversationId': '',
+      'status': 'FAILED',
+      'resultCode': resultCode,
+      'receipt': null,
+      'amount': null,
+      'receiverName': null,
+      'failureReason': failureReason,
+      'mpesaTimestamp': null,
+      'settledAt': now.toIso8601String(),
+    },
+  );
+}
+
+appwrite_models.Document b2cTimeoutDocument({
+  String originatorId = testOriginatorConversationId,
+}) {
+  final now = DateTime.utc(2026, 4, 5, 10, 0, 0);
+  return appwrite_models.Document(
+    $id: originatorId,
+    $sequence: '1',
+    $collectionId: testB2cCollectionId,
+    $databaseId: 'payments',
+    $createdAt: now.toIso8601String(),
+    $updatedAt: now.toIso8601String(),
+    $permissions: ['read("user:$testUserId")'],
+    data: {
+      'originatorConversationId': originatorId,
+      'conversationId': '',
+      'status': 'TIMEOUT',
+      'resultCode': -1,
+      'receipt': null,
+      'amount': null,
+      'receiverName': null,
+      'failureReason': 'Request timed out.',
+      'mpesaTimestamp': null,
+      'settledAt': now.toIso8601String(),
+    },
+  );
+}
+
+RealtimeMessage b2cRealtimeMessage({
+  required String status,
+  String originatorId = testOriginatorConversationId,
+  String receipt = testB2cReceipt,
+  int amount = 500,
+  int resultCode = 0,
+  String? failureReason,
+  String eventType = 'create',
+  DateTime? mpesaTimestamp,
+}) {
+  final now = DateTime.utc(2026, 4, 5, 10, 0, 0);
+  final mpesaTs = mpesaTimestamp ?? DateTime.utc(2026, 4, 5, 9, 57, 0);
+  return RealtimeMessage(
+    events: [
+      'databases.payments.collections.$testB2cCollectionId'
+          '.documents.$originatorId.$eventType',
+    ],
+    payload: {
+      '\$id': originatorId,
+      'originatorConversationId': originatorId,
+      'conversationId': 'AG_20240322_00007cdf9d70a7c6ab98',
+      'status': status,
+      'resultCode': resultCode,
+      'receipt': status == 'SUCCESS' ? receipt : null,
+      'amount': status == 'SUCCESS' ? amount : null,
+      'receiverName': status == 'SUCCESS' ? testReceiverName : null,
+      'failureReason': failureReason,
+      'mpesaTimestamp': status == 'SUCCESS' ? mpesaTs.toIso8601String() : null,
+      'settledAt': now.toIso8601String(),
+    },
+    channels: [
+      'databases.payments.collections.$testB2cCollectionId.documents.$originatorId',
+    ],
+    timestamp: now.toIso8601String(),
+  );
+}
+
 RealtimeMessage realtimeMessage({
   required String status,
   required String cid,

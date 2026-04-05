@@ -12,6 +12,7 @@ final class DarajaConfig {
     required this.appwriteDatabaseId,
     required this.appwriteCollectionId,
     required this.callbackDomain,
+    this.b2cCollectionId,
   });
 
   final String consumerKey;
@@ -28,6 +29,10 @@ final class DarajaConfig {
   /// The package appends the callback path and uid query parameter automatically.
   /// Example: https://64d4d22db370ae41a32e.fra.appwrite.run
   final String callbackDomain;
+
+  /// The Appwrite collection ID for B2C disbursement results.
+  /// Required when using [Daraja.b2cPush]. Omit if only using STK Push.
+  final String? b2cCollectionId;
 
   String get baseUrl => switch (environment) {
     DarajaEnvironment.sandbox => 'https://sandbox.safaricom.co.ke',
