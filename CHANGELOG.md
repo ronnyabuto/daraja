@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.1 — 2026-04-06
+
+- Added dartdoc comments across all public API elements (exceeds pub.dev 20% threshold).
+- Added `example/lib/main.dart` minimal Flutter example for pub.dev scoring.
+- Added B2C disbursement support: `Daraja.b2cPush()`, `DisbursementState` sealed class, `B2cCommandId`, `SecurityCredential`.
+
 ## 0.1.0 — 2026-03-31
 
 Initial release.
