@@ -1,6 +1,6 @@
 name: daraja
 description: Full M-Pesa STK Push lifecycle for Flutter — initiation, real-time callback delivery, timeout handling, and killed-app recovery. Backed by Appwrite.
-version: 0.1.0
+version: 0.1.1
 homepage: https://github.com/ronnyabuto/daraja
 repository: https://github.com/ronnyabuto/daraja
 issue_tracker: https://github.com/ronnyabuto/daraja/issues
