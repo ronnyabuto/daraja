@@ -32,10 +32,7 @@ class DarajaExampleApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'daraja example',
-      home: const PaymentPage(),
-    );
+    return MaterialApp(title: 'daraja example', home: const PaymentPage());
   }
 }
 
