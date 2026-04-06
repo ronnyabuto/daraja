@@ -1,25 +1,44 @@
+/// Sealed state type for the STK Push payment lifecycle.
+///
+/// States flow in this order for a successful payment:
+/// [PaymentInitiating] → [PaymentPending] → [PaymentSuccess]
+///
+/// On failure or timeout:
+/// [PaymentInitiating] → [PaymentPending] →
+///   [PaymentFailed] | [PaymentCancelled] | [PaymentTimeout]
+///
+/// On initiation error (before the STK Push reaches Safaricom):
+/// [PaymentInitiating] → [PaymentError]
 sealed class PaymentState {
   const PaymentState();
 }
 
+/// No payment is currently active.
 final class PaymentIdle extends PaymentState {
   const PaymentIdle();
 }
 
+/// The STK Push request is being sent to Safaricom.
 final class PaymentInitiating extends PaymentState {
   const PaymentInitiating();
 }
 
+/// Safaricom accepted the STK Push. The customer has been prompted to enter
+/// their M-Pesa PIN. Waiting for the async callback.
 final class PaymentPending extends PaymentState {
   const PaymentPending({
     required this.checkoutRequestId,
     required this.initiatedAt,
   });
 
+  /// The Safaricom-assigned identifier for this transaction.
   final String checkoutRequestId;
+
+  /// When the STK Push was initiated (device local time).
   final DateTime initiatedAt;
 }
 
+/// The customer entered their PIN and the payment was processed successfully.
 final class PaymentSuccess extends PaymentState {
   const PaymentSuccess({
     required this.checkoutRequestId,
@@ -29,6 +48,7 @@ final class PaymentSuccess extends PaymentState {
     this.mpesaTimestamp,
   });
 
+  /// The Safaricom-assigned identifier for this transaction.
   final String checkoutRequestId;
 
   /// The M-Pesa receipt number (e.g. `NLJ7RT61SV`).
@@ -43,6 +63,7 @@ final class PaymentSuccess extends PaymentState {
   /// in M-Pesa integrations.
   final String receiptNumber;
 
+  /// Amount paid in KES.
   final int amount;
 
   /// When the Appwrite Function processed the callback (UTC).
@@ -57,6 +78,8 @@ final class PaymentSuccess extends PaymentState {
   final DateTime? mpesaTimestamp;
 }
 
+/// The payment could not be completed. See [resultCode] and [message] for the
+/// reason, or use the convenience getters for the most common failure modes.
 final class PaymentFailed extends PaymentState {
   const PaymentFailed({
     required this.checkoutRequestId,
@@ -64,8 +87,13 @@ final class PaymentFailed extends PaymentState {
     required this.message,
   });
 
+  /// The Safaricom-assigned identifier for this transaction.
   final String checkoutRequestId;
+
+  /// Safaricom result code. Non-zero indicates the reason for failure.
   final int resultCode;
+
+  /// Human-readable failure description from Safaricom.
   final String message;
 
   /// Whether the payment failed because the customer had insufficient funds
@@ -84,9 +112,11 @@ final class PaymentFailed extends PaymentState {
   bool get isSubscriberLocked => resultCode == 1001;
 }
 
+/// The customer dismissed or cancelled the M-Pesa PIN prompt.
 final class PaymentCancelled extends PaymentState {
   const PaymentCancelled({required this.checkoutRequestId});
 
+  /// The Safaricom-assigned identifier for this transaction.
   final String checkoutRequestId;
 }
 
@@ -98,11 +128,15 @@ final class PaymentCancelled extends PaymentState {
 final class PaymentTimeout extends PaymentState {
   const PaymentTimeout({required this.checkoutRequestId});
 
+  /// The Safaricom-assigned identifier for this transaction.
   final String checkoutRequestId;
 }
 
+/// An error occurred before or during payment initiation. The STK Push did not
+/// reach the customer's phone. Check the [message] for details.
 final class PaymentError extends PaymentState {
   const PaymentError({required this.message});
 
+  /// Human-readable description of the error.
   final String message;
 }
