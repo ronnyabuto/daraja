@@ -30,7 +30,7 @@ class DarajaClient {
     ); // Validate before any network call.
 
     final token = await _getToken();
-    final timestamp = _eatTimestamp();
+    final timestamp = _mpesaTimestamp();
 
     final response = await _http.post(
       Uri.parse('${_config.baseUrl}/mpesa/stkpush/v1/processrequest'),
@@ -74,7 +74,7 @@ class DarajaClient {
 
   Future<PaymentResult> queryStkStatus(String checkoutRequestId) async {
     final token = await _getToken();
-    final timestamp = _eatTimestamp();
+    final timestamp = _mpesaTimestamp();
 
     final response = await _http.post(
       Uri.parse('${_config.baseUrl}/mpesa/stkpushquery/v1/query'),
@@ -144,7 +144,7 @@ class DarajaClient {
     return base64.encode(utf8.encode(raw));
   }
 
-  String _eatTimestamp() {
+  String _mpesaTimestamp() {
     final eat = DateTime.now().toUtc().add(const Duration(hours: 3));
     return '${eat.year}'
         '${eat.month.toString().padLeft(2, '0')}'
@@ -221,7 +221,7 @@ class DarajaClient {
     final token = await _getToken();
 
     final response = await _http.post(
-      Uri.parse('${_config.baseUrl}/mpesa/b2c/v3/paymentrequest'),
+      Uri.parse('${_config.baseUrl}/mpesa/b2c/v1/paymentrequest'),
       headers: {
         'Authorization': 'Bearer $token',
         'Content-Type': 'application/json',

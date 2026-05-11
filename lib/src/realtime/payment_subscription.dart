@@ -48,6 +48,8 @@ class PaymentSubscription {
   /// during the gap. Returns the terminal state if found, null if still pending.
   Future<PaymentState?> poll() async {
     try {
+      // Databases API is kept over TablesDB — Realtime document channels only
+      // exist on the Databases service. TablesDB has no equivalent channel.
       // ignore: deprecated_member_use
       final doc = await _databases.getDocument(
         databaseId: _config.appwriteDatabaseId,
@@ -73,15 +75,16 @@ PaymentState? _parseDocument(
 ) {
   final status = data['status'] as String?;
   return switch (status) {
-    'SUCCESS' => PaymentSuccess(
-      checkoutRequestId: checkoutRequestId,
-      receiptNumber: data['receipt'] as String,
-      amount: data['amount'] as int,
-      settledAt: DateTime.parse(data['settledAt'] as String),
-      mpesaTimestamp: data['mpesaTimestamp'] != null
-          ? DateTime.parse(data['mpesaTimestamp'] as String)
-          : null,
-    ),
+    'SUCCESS' when data['receipt'] is String && data['amount'] is int =>
+      PaymentSuccess(
+        checkoutRequestId: checkoutRequestId,
+        receiptNumber: data['receipt'] as String,
+        amount: data['amount'] as int,
+        settledAt: DateTime.parse(data['settledAt'] as String),
+        mpesaTimestamp: data['mpesaTimestamp'] != null
+            ? DateTime.parse(data['mpesaTimestamp'] as String)
+            : null,
+      ),
     'FAILED' => PaymentFailed(
       checkoutRequestId: checkoutRequestId,
       resultCode: data['resultCode'] as int,

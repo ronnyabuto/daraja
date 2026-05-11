@@ -14,6 +14,11 @@ sealed class PaymentState {
 }
 
 /// No payment is currently active.
+///
+/// This state is never emitted by the package — it is a sentinel value for
+/// consumers who need a typed "idle" initial state in their own state
+/// management (e.g. as the seed for a [StreamBuilder] or the initial value
+/// of a Riverpod provider).
 final class PaymentIdle extends PaymentState {
   const PaymentIdle();
 }
@@ -36,6 +41,15 @@ final class PaymentPending extends PaymentState {
 
   /// When the STK Push was initiated (device local time).
   final DateTime initiatedAt;
+
+  @override
+  bool operator ==(Object other) =>
+      other is PaymentPending &&
+      other.checkoutRequestId == checkoutRequestId &&
+      other.initiatedAt == initiatedAt;
+
+  @override
+  int get hashCode => Object.hash(checkoutRequestId, initiatedAt);
 }
 
 /// The customer entered their PIN and the payment was processed successfully.
@@ -76,6 +90,24 @@ final class PaymentSuccess extends PaymentState {
   /// Prefer this over [settledAt] for reconciliation timestamps — it reflects
   /// when Safaricom completed the transaction, not when the callback arrived.
   final DateTime? mpesaTimestamp;
+
+  @override
+  bool operator ==(Object other) =>
+      other is PaymentSuccess &&
+      other.checkoutRequestId == checkoutRequestId &&
+      other.receiptNumber == receiptNumber &&
+      other.amount == amount &&
+      other.settledAt == settledAt &&
+      other.mpesaTimestamp == mpesaTimestamp;
+
+  @override
+  int get hashCode => Object.hash(
+    checkoutRequestId,
+    receiptNumber,
+    amount,
+    settledAt,
+    mpesaTimestamp,
+  );
 }
 
 /// The payment could not be completed. See [resultCode] and [message] for the
@@ -110,6 +142,16 @@ final class PaymentFailed extends PaymentState {
   /// This is a transient state. Prompt the customer to try again after a
   /// short delay rather than treating it as a hard failure.
   bool get isSubscriberLocked => resultCode == 1001;
+
+  @override
+  bool operator ==(Object other) =>
+      other is PaymentFailed &&
+      other.checkoutRequestId == checkoutRequestId &&
+      other.resultCode == resultCode &&
+      other.message == message;
+
+  @override
+  int get hashCode => Object.hash(checkoutRequestId, resultCode, message);
 }
 
 /// The customer dismissed or cancelled the M-Pesa PIN prompt.
@@ -118,6 +160,14 @@ final class PaymentCancelled extends PaymentState {
 
   /// The Safaricom-assigned identifier for this transaction.
   final String checkoutRequestId;
+
+  @override
+  bool operator ==(Object other) =>
+      other is PaymentCancelled &&
+      other.checkoutRequestId == checkoutRequestId;
+
+  @override
+  int get hashCode => checkoutRequestId.hashCode;
 }
 
 /// The T+90s timeout elapsed with no callback received.
@@ -130,6 +180,14 @@ final class PaymentTimeout extends PaymentState {
 
   /// The Safaricom-assigned identifier for this transaction.
   final String checkoutRequestId;
+
+  @override
+  bool operator ==(Object other) =>
+      other is PaymentTimeout &&
+      other.checkoutRequestId == checkoutRequestId;
+
+  @override
+  int get hashCode => checkoutRequestId.hashCode;
 }
 
 /// An error occurred before or during payment initiation. The STK Push did not
@@ -139,4 +197,11 @@ final class PaymentError extends PaymentState {
 
   /// Human-readable description of the error.
   final String message;
+
+  @override
+  bool operator ==(Object other) =>
+      other is PaymentError && other.message == message;
+
+  @override
+  int get hashCode => message.hashCode;
 }

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:developer';
 
 import 'package:appwrite/appwrite.dart';
 import 'package:flutter/widgets.dart';
@@ -145,7 +146,9 @@ class PaymentNotifier with WidgetsBindingObserver {
         _onTerminal(state);
         return true;
       }
-    } catch (_) {}
+    } catch (e) {
+      log('poll error — $e', name: 'daraja');
+    }
     return false;
   }
 
@@ -171,12 +174,11 @@ class PaymentNotifier with WidgetsBindingObserver {
     }
     _pollTimers = [];
     WidgetsBinding.instance.removeObserver(this);
-    SharedPreferencesAsync().remove(_prefKey);
+    unawaited(SharedPreferencesAsync().remove(_prefKey));
   }
 
   void dispose() {
     _cleanup();
     _controller.close();
-    _darajaClient.close();
   }
 }

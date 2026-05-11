@@ -88,8 +88,8 @@ Future<dynamic> _handleStkCallback(final context) async {
 
   try {
     await databases.createDocument(
-      databaseId: Platform.environment['DARAJA_DATABASE_ID']!,
-      collectionId: Platform.environment['DARAJA_COLLECTION_ID']!,
+      databaseId: _env('DARAJA_DATABASE_ID'),
+      collectionId: _env('DARAJA_COLLECTION_ID'),
       documentId: checkoutRequestId,
       data: {
         'checkoutRequestId': checkoutRequestId,
@@ -220,8 +220,8 @@ Future<dynamic> _handleB2c(final context, {required bool isTimeout}) async {
 
   try {
     await databases.createDocument(
-      databaseId: Platform.environment['DARAJA_DATABASE_ID']!,
-      collectionId: Platform.environment['DARAJA_B2C_COLLECTION_ID']!,
+      databaseId: _env('DARAJA_DATABASE_ID'),
+      collectionId: _env('DARAJA_B2C_COLLECTION_ID'),
       documentId: originatorConversationId,
       data: {
         'originatorConversationId': originatorConversationId,
@@ -258,9 +258,13 @@ Future<dynamic> _handleB2c(final context, {required bool isTimeout}) async {
 // ---------------------------------------------------------------------------
 
 Client _appwriteClient() => Client()
-  ..setEndpoint(Platform.environment['APPWRITE_FUNCTION_API_ENDPOINT']!)
-  ..setProject(Platform.environment['APPWRITE_FUNCTION_PROJECT_ID']!)
-  ..setKey(Platform.environment['APPWRITE_API_KEY']!);
+  ..setEndpoint(_env('APPWRITE_FUNCTION_API_ENDPOINT'))
+  ..setProject(_env('APPWRITE_FUNCTION_PROJECT_ID'))
+  ..setKey(_env('APPWRITE_API_KEY'));
+
+String _env(String key) =>
+    Platform.environment[key] ??
+    (throw StateError('Required environment variable "$key" is not set'));
 
 String _mapStkStatus(int code) => switch (code) {
   1032 => 'CANCELLED',
