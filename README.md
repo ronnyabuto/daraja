@@ -277,6 +277,9 @@ final daraja = Daraja(
   ),
 );
 
+// On app startup — restore any disbursement pending from a previous session
+await daraja.restorePendingDisbursement();
+
 try {
   final stream = await daraja.b2cPush(
     phone: '0712345678',
