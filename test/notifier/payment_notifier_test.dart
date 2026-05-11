@@ -1,3 +1,4 @@
+// ignore_for_file: deprecated_member_use
 import 'dart:async';
 
 import 'package:appwrite/appwrite.dart';
@@ -43,7 +44,6 @@ void main() {
 
   void stubDatabaseNotFound() {
     when(
-      // ignore: deprecated_member_use
       () => mockDatabases.getDocument(
         databaseId: any(named: 'databaseId'),
         collectionId: any(named: 'collectionId'),
@@ -324,7 +324,6 @@ void main() {
 
         fake.elapse(const Duration(seconds: 10));
         verify(
-          // ignore: deprecated_member_use
           () => mockDatabases.getDocument(
             databaseId: any(named: 'databaseId'),
             collectionId: any(named: 'collectionId'),
@@ -334,7 +333,6 @@ void main() {
 
         fake.elapse(const Duration(seconds: 20));
         verify(
-          // ignore: deprecated_member_use
           () => mockDatabases.getDocument(
             databaseId: any(named: 'databaseId'),
             collectionId: any(named: 'collectionId'),
@@ -344,7 +342,6 @@ void main() {
 
         fake.elapse(const Duration(seconds: 40));
         verify(
-          // ignore: deprecated_member_use
           () => mockDatabases.getDocument(
             databaseId: any(named: 'databaseId'),
             collectionId: any(named: 'collectionId'),
@@ -382,7 +379,6 @@ void main() {
         // Advance past all poll times — no further polls should fire.
         fake.elapse(const Duration(seconds: 100));
         verifyNever(
-          // ignore: deprecated_member_use
           () => mockDatabases.getDocument(
             databaseId: any(named: 'databaseId'),
             collectionId: any(named: 'collectionId'),
@@ -409,7 +405,6 @@ void main() {
 
         final successDoc = successDocument();
         when(
-          // ignore: deprecated_member_use
           () => mockDatabases.getDocument(
             databaseId: any(named: 'databaseId'),
             collectionId: any(named: 'collectionId'),
@@ -440,7 +435,6 @@ void main() {
         ).thenAnswer((_) async => testCid);
 
         when(
-          // ignore: deprecated_member_use
           () => mockDatabases.getDocument(
             databaseId: any(named: 'databaseId'),
             collectionId: any(named: 'collectionId'),
@@ -487,7 +481,6 @@ void main() {
         await Future<void>.delayed(Duration.zero);
 
         verify(
-          // ignore: deprecated_member_use
           () => mockDatabases.getDocument(
             databaseId: any(named: 'databaseId'),
             collectionId: any(named: 'collectionId'),
@@ -502,7 +495,6 @@ void main() {
       await Future<void>.delayed(Duration.zero);
 
       verifyNever(
-        // ignore: deprecated_member_use
         () => mockDatabases.getDocument(
           databaseId: any(named: 'databaseId'),
           collectionId: any(named: 'collectionId'),
@@ -531,7 +523,6 @@ void main() {
 
         // Payment resolves while app was backgrounded.
         when(
-          // ignore: deprecated_member_use
           () => mockDatabases.getDocument(
             databaseId: any(named: 'databaseId'),
             collectionId: any(named: 'collectionId'),
@@ -586,7 +577,6 @@ void main() {
               'daraja_pending_cid': testCid,
             });
         when(
-          // ignore: deprecated_member_use
           () => mockDatabases.getDocument(
             databaseId: any(named: 'databaseId'),
             collectionId: any(named: 'collectionId'),
@@ -614,7 +604,6 @@ void main() {
               'daraja_pending_cid': testCid,
             });
         when(
-          // ignore: deprecated_member_use
           () => mockDatabases.getDocument(
             databaseId: any(named: 'databaseId'),
             collectionId: any(named: 'collectionId'),

@@ -86,6 +86,14 @@ For duplicates that do arrive, the document ID is the `CheckoutRequestID`. The s
 
 The same design that handles duplicate callbacks also handles any other scenario where the same CID appears more than once: `documentId = checkoutRequestId`. Appwrite enforces uniqueness at the document level. There is no separate deduplication logic, no `Set<String>` of seen IDs, no transaction needed.
 
+## B2C disbursements
+
+B2C follows the same architecture as STK Push with one structural difference: the `OriginatorConversationID` is generated client-side (a UUID v4) before the network call, so the Realtime channel is known before initiation. The subscription is opened before `initiateB2c()` is called — this eliminates the race between Safaricom accepting the request and the callback arriving.
+
+Recovery and lifecycle polling mirror the STK Push path: the `OriginatorConversationID` is persisted to SharedPreferences, `restorePendingDisbursement()` recovers it on restart, and `WidgetsBindingObserver` polls immediately on app resume. Polling fires at T+15s, T+45s, and T+75s — offset later than STK Push because B2C callbacks typically take longer to arrive. T+90s is the hard timeout.
+
+`DisbursementTimeout` carries the same warning as `PaymentTimeout`: the funds may have moved. Check the Safaricom dashboard before treating a timeout as a failure.
+
 ## What is not in scope
 
-B2C, C2B, account balance, reversals, Ratiba, Mini Apps. None of these are in v1. The package is deliberately narrow — STK Push, end to end. Scope creep in payment libraries is how bugs ship.
+C2B, account balance, reversals, Ratiba, Mini Apps. The package covers STK Push and B2C end to end. Scope creep in payment libraries is how bugs ship.

@@ -1,5 +1,8 @@
+import 'package:meta/meta.dart';
+
 /// The result of an STK Query (polling) call.
 /// Used internally by the timeout cascade — not part of the public API.
+@internal
 final class PaymentResult {
   const PaymentResult({
     required this.checkoutRequestId,

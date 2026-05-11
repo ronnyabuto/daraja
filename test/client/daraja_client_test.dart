@@ -795,7 +795,7 @@ void main() {
         ),
       ).captured;
       final uri = captured.single as Uri;
-      expect(uri.path, '/mpesa/b2c/v3/paymentrequest');
+      expect(uri.path, '/mpesa/b2c/v1/paymentrequest');
     });
 
     test(

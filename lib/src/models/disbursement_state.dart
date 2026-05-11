@@ -24,6 +24,14 @@ final class DisbursementPending extends DisbursementState {
 
   /// Developer-generated correlation ID, echoed by Safaricom in the callback.
   final String originatorConversationId;
+
+  @override
+  bool operator ==(Object other) =>
+      other is DisbursementPending &&
+      other.originatorConversationId == originatorConversationId;
+
+  @override
+  int get hashCode => originatorConversationId.hashCode;
 }
 
 /// Safaricom processed the disbursement and the funds were sent.
@@ -59,6 +67,28 @@ final class DisbursementSuccess extends DisbursementState {
   /// When Safaricom completed the transaction (UTC). Null if Safaricom omitted
   /// `TransactionCompletedDateTime` in the callback — fall back to [settledAt].
   final DateTime? mpesaTimestamp;
+
+  @override
+  bool operator ==(Object other) =>
+      other is DisbursementSuccess &&
+      other.originatorConversationId == originatorConversationId &&
+      other.conversationId == conversationId &&
+      other.receiptNumber == receiptNumber &&
+      other.amount == amount &&
+      other.receiverName == receiverName &&
+      other.settledAt == settledAt &&
+      other.mpesaTimestamp == mpesaTimestamp;
+
+  @override
+  int get hashCode => Object.hash(
+    originatorConversationId,
+    conversationId,
+    receiptNumber,
+    amount,
+    receiverName,
+    settledAt,
+    mpesaTimestamp,
+  );
 }
 
 /// Safaricom rejected or was unable to complete the disbursement.
@@ -76,6 +106,17 @@ final class DisbursementFailed extends DisbursementState {
 
   /// Human-readable description from Safaricom.
   final String message;
+
+  @override
+  bool operator ==(Object other) =>
+      other is DisbursementFailed &&
+      other.originatorConversationId == originatorConversationId &&
+      other.resultCode == resultCode &&
+      other.message == message;
+
+  @override
+  int get hashCode =>
+      Object.hash(originatorConversationId, resultCode, message);
 }
 
 /// The B2C request expired in Safaricom's queue without processing.
@@ -87,4 +128,12 @@ final class DisbursementTimeout extends DisbursementState {
   const DisbursementTimeout({required this.originatorConversationId});
 
   final String originatorConversationId;
+
+  @override
+  bool operator ==(Object other) =>
+      other is DisbursementTimeout &&
+      other.originatorConversationId == originatorConversationId;
+
+  @override
+  int get hashCode => originatorConversationId.hashCode;
 }
