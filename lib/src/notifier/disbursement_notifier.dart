@@ -23,10 +23,10 @@ class DisbursementNotifier with WidgetsBindingObserver {
     required Databases databases,
     required Realtime realtime,
     required DarajaClient darajaClient,
-  })  : _config = config,
-        _databases = databases,
-        _realtime = realtime,
-        _darajaClient = darajaClient;
+  }) : _config = config,
+       _databases = databases,
+       _realtime = realtime,
+       _darajaClient = darajaClient;
 
   final DarajaConfig _config;
   final Databases _databases;
@@ -122,7 +122,8 @@ class DisbursementNotifier with WidgetsBindingObserver {
 
   void _openSubscription(String oid, String collectionId) {
     _closeSubscription();
-    final channel = 'databases.${_config.appwriteDatabaseId}'
+    final channel =
+        'databases.${_config.appwriteDatabaseId}'
         '.collections.$collectionId'
         '.documents.$oid';
     _realtimeSub = _realtime.subscribe([channel]);

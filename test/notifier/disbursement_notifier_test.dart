@@ -160,9 +160,7 @@ void main() {
     test('subscribes to Realtime before calling initiateB2c', () async {
       final callOrder = <String>[];
 
-      when(
-        () => mockRealtime.subscribe(any()),
-      ).thenAnswer((_) {
+      when(() => mockRealtime.subscribe(any())).thenAnswer((_) {
         callOrder.add('subscribe');
         return RealtimeSubscription(
           controller: realtimeController,
@@ -258,9 +256,7 @@ void main() {
         fake.flushMicrotasks();
 
         fake.elapse(const Duration(seconds: 5));
-        realtimeController.add(
-          b2cRealtimeMessage(status: 'SUCCESS'),
-        );
+        realtimeController.add(b2cRealtimeMessage(status: 'SUCCESS'));
         fake.flushMicrotasks();
 
         fake.elapse(const Duration(seconds: 100));
@@ -428,31 +424,28 @@ void main() {
       expect(states, isEmpty);
     });
 
-    test(
-      'does nothing when b2cCollectionId is not configured',
-      () async {
-        final noB2cNotifier = DisbursementNotifier(
-          config: testConfig, // no b2cCollectionId
-          databases: mockDatabases,
-          realtime: mockRealtime,
-          darajaClient: mockClient,
-        );
-        addTearDown(noB2cNotifier.dispose);
+    test('does nothing when b2cCollectionId is not configured', () async {
+      final noB2cNotifier = DisbursementNotifier(
+        config: testConfig, // no b2cCollectionId
+        databases: mockDatabases,
+        realtime: mockRealtime,
+        darajaClient: mockClient,
+      );
+      addTearDown(noB2cNotifier.dispose);
 
-        SharedPreferencesAsyncPlatform.instance =
-            InMemorySharedPreferencesAsync.withData({
-              'daraja_pending_b2c_oid': testOriginatorConversationId,
-            });
+      SharedPreferencesAsyncPlatform.instance =
+          InMemorySharedPreferencesAsync.withData({
+            'daraja_pending_b2c_oid': testOriginatorConversationId,
+          });
 
-        final states = <DisbursementState>[];
-        noB2cNotifier.stream.listen(states.add);
+      final states = <DisbursementState>[];
+      noB2cNotifier.stream.listen(states.add);
 
-        await noB2cNotifier.restorePendingDisbursement();
-        await Future<void>.delayed(Duration.zero);
+      await noB2cNotifier.restorePendingDisbursement();
+      await Future<void>.delayed(Duration.zero);
 
-        expect(states, isEmpty);
-      },
-    );
+      expect(states, isEmpty);
+    });
 
     test(
       'emits DisbursementPending when OID exists and disbursement is still open',

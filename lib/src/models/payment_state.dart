@@ -163,8 +163,7 @@ final class PaymentCancelled extends PaymentState {
 
   @override
   bool operator ==(Object other) =>
-      other is PaymentCancelled &&
-      other.checkoutRequestId == checkoutRequestId;
+      other is PaymentCancelled && other.checkoutRequestId == checkoutRequestId;
 
   @override
   int get hashCode => checkoutRequestId.hashCode;
@@ -183,8 +182,7 @@ final class PaymentTimeout extends PaymentState {
 
   @override
   bool operator ==(Object other) =>
-      other is PaymentTimeout &&
-      other.checkoutRequestId == checkoutRequestId;
+      other is PaymentTimeout && other.checkoutRequestId == checkoutRequestId;
 
   @override
   int get hashCode => checkoutRequestId.hashCode;
