@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.1.2 — 2026-05-11
+
+- Fixed B2C API endpoint (`/v3/` → `/v1/`).
+- Added `Daraja.restorePendingDisbursement()` for killed-app recovery on B2C — mirrors `restorePendingPayment()`.
+- Added `Daraja.disbursementStream` for a global B2C state listener, consistent with `Daraja.stream` for STK Push.
+- B2C lifecycle (Realtime subscription, polling at T+15s/T+45s/T+75s, T+90s timeout, SharedPreferences persistence) extracted into `DisbursementNotifier`.
+- Added `==` and `hashCode` to all `PaymentState` and `DisbursementState` subclasses.
+- Replaced null-bang env var access in the Appwrite Function with a throwing `_env()` helper.
+
 ## 0.1.1 — 2026-04-06
 
 - Added dartdoc comments across all public API elements (exceeds pub.dev 20% threshold).
